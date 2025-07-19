@@ -1,0 +1,16 @@
+
+{
+  "name": "Holmes & Watson Supreme AI",
+  "short_name": "HWS AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "The most advanced AI assistant ever built.",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
