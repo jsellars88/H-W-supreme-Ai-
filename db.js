@@ -1,0 +1,1 @@
+const { createClient } = require('@supabase/supabase-js'); const supabase = createClient('https://bbgkelxajceltsqlsfxz.supabase.co', process.env.SUPABASE_KEY);
