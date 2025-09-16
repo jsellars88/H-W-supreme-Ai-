@@ -1,1 +1,17 @@
-<!DOCTYPE html><html><head><title>Holmes & Watson Supreme AI</title></head><body><h1>Welcome to Holmes & Watson Supreme AI</h1></body></html>
+
+{% extends "base.html" %}
+{% block content %}
+  <div class="grid">
+    {% for p in posts %}
+      <div class="card">
+        <div class="topic">POST #{{p.id}} — {{p.title}}</div>
+        {% if p.image %}<img class="thumb" src="{{ url_for('static', filename='images/' + p.image) }}" alt="image">{% endif %}
+        <div class="post"><strong>X:</strong> {{p.x}}</div>
+        <div class="post" style="margin-top:8px;"><strong>LinkedIn:</strong> {{p.linkedin}}</div>
+        <div class="post" style="margin-top:8px;"><strong>Facebook:</strong> {{p.facebook}}</div>
+        <div class="prompt"><strong>Visual Prompt</strong>
+{{p.visual_prompt}}</div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

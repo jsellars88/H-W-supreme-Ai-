@@ -1,0 +1,35 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{{ title if title else "Holmes & Watson AI Ecosystem" }}</title>
+  <style>
+    :root{--bg:#0b1020;--card:#121a33;--text:#e6eefc;--muted:#9bb3ff;--accent:#3ea1ff;--gold:#f4c542;}
+    body{margin:0;background:linear-gradient(160deg,#0b1020,#0e152b 60%,#0b1020);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    header{padding:24px 20px;text-align:center;border-bottom:1px solid #1f2a4d}
+    header h1{margin:0;font-size:28px;letter-spacing:.5px}
+    header .sub{color:var(--muted);font-size:13px;margin-top:6px}
+    main{max-width:980px;margin:20px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+    .card{background:linear-gradient(180deg,#121a33,#10172f);border:1px solid #1f2a4d;border-radius:14px;padding:16px}
+    .topic{font-size:12px;color:var(--gold);letter-spacing:.3px;margin-bottom:8px;text-transform:uppercase}
+    .post{white-space:pre-wrap;font-size:14px;line-height:1.4}
+    .prompt{color:#b9c6ff;font-size:12px;border-top:1px dashed #263561;margin-top:12px;padding-top:10px;white-space:pre-wrap}
+    img.thumb{width:100%;border-radius:10px;border:1px solid #20305a;margin:8px 0}
+    .btn{display:inline-block;padding:8px 12px;border:1px solid #2a3d72;border-radius:10px;background:#0f1a34;color:#dfe9ff}
+    footer{color:#7d8fcb;text-align:center;font-size:12px;padding:20px;margin-top:24px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Holmes & Watson Supreme AI Ecosystem™</h1>
+  <div class="sub">Powered by URIS‑Omni‑Core™ / Ultimate WhiteSwan™ — Tuned by Nikola Tesla</div>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer>© Holmes & Watson AI. WhiteSwan OS™, OmniBots™, Guardian Vault X™, TruthSeek™.</footer>
+</body>
+</html>
