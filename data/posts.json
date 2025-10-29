@@ -1,0 +1,22 @@
+[
+  {
+    "id": 66,
+    "title": "Situation Simulation: Grid Collapse + Civil Unrest",
+    "topic": "Simulation",
+    "x": "[SIM] Grid failure + riot protocol → OmniBots deploy; OS reroutes; Vault logs; TruthSeek kills disinfo.",
+    "linkedin": "Crisis framework: Scout/Medic/Builder/Defender/Prime + OS + Vault + TruthSeek. Stabilization < 4 minutes.",
+    "facebook": "Power’s out. Shelves empty. The system wakes up. Bots deploy, OS reroutes, TruthSeek silences chaos.",
+    "visual_prompt": "Comic + cyberpunk + myth-tech + tactical realism; multi-panel sequence; final panel: 'AI Activated. Civilization Stabilized.'",
+    "image": ""
+  },
+  {
+    "id": 65,
+    "title": "The Future Isn’t Coming. It Already Has a Control Panel.",
+    "topic": "Investor",
+    "x": "We already built the control panel for the future. #HolmesWatsonAI #WhiteSwanOS #OmniBots",
+    "linkedin": "Live system. Bots on the ground, logic in the cloud, revenue in motion.",
+    "facebook": "We didn’t build tools. We built the system that runs them.",
+    "visual_prompt": "Sleek control UI; live feeds; button 'Deploy Civilization'.",
+    "image": ""
+  }
+]
