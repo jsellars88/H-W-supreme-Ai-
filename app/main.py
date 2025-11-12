@@ -3,7 +3,7 @@ from flask import Flask, render_template, jsonify
 import json, os
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__), 'data', 'posts.json')
+DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'posts.json')
 
 def load_posts():
     with open(DATA_PATH, 'r', encoding='utf-8') as f:
