@@ -1,27 +1,29 @@
-## Holmes & Watson Supreme AI
+# WhiteSwan Governance Kernel
 
-### System Description
-Holmes & Watson Supreme AI is an advanced artificial intelligence system designed to deliver intelligent reasoning, problem-solving abilities, and decision-making enhancements across various domains.
+This repository contains the core implementation of the WhiteSwan Governance Kernel v3.1, a production reference implementation providing secure, tiered governance using Ed25519 operator signatures.
 
-### Core Problems Solved
-- **Analytical Thinking**: Provides analytical insights that help in making informed decisions.
-- **Data Interpretation**: Aids users by interpreting complex data sets.
-- **Automated Assistance**: Streamlines tasks and provides quick solutions based on contextual understanding.
+## Repository Structure
 
-### Architectural Principles
-- **Modularity**: Components are designed to function independently while integrating seamlessly.
-- **Scalability**: The architecture supports scaling with increased user demands without performance degradation.
-- **Interoperability**: Ensures compatibility with existing systems and tools.
+- `src/`: Contains the main governance kernel logic.
+- `tests/`: Unit tests for the governance kernel.
+- `docs/`: Documentation including threat models, specifications, and deployment guides.
 
-### Components
-- **Data Processing Unit**: Manages data input and preprocessing for the AI algorithms.
-- **AI Core**: Houses the machine learning models and algorithms for decision-making.
-- **User Interface**: Provides interaction channels for users to engage with the AI system.
+## Features
 
-### High-Level Design
-- The system follows a client-server architecture, ensuring efficient data exchange and processing.
-- Communication between components is enabled through APIs allowing real-time updates and interactions.
-- Incorporates feedback loops to continually improve the AI's performance by analyzing user interactions.
+Key features of the governance kernel include:
+- Cryptographic authority enforcement with Ed25519.
+- Hash-chained audit logs for tamper evidence.
+- Role-based operator authorization with scope limits.
 
-### Conclusion
-Holmes & Watson Supreme AI aims to revolutionize the way we approach problem-solving and decision-making in various sectors, paving the way for a future where AI plays a central role in our daily lives.
+## Getting Started
+
+### Install Dependencies
+Run:
+```
+pip install -r requirements.txt
+```
+
+### Run Tests
+```
+pytest
+```
