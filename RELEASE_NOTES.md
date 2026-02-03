@@ -1,0 +1,14 @@
+### Release Notes for ws-govkernel-v3.1
+
+#### What changed (v3.0 → v3.1 fixes):
+- Various fixes and improvements transitioning from v3.0 to v3.1.
+
+#### What's guaranteed:
+- Bright Line
+- SAS (Security Assertions)
+- T4 dual authentication
+
+#### What's explicitly not guaranteed:
+- HSM support (Hardware Security Modules)
+- WORM logs (Write Once, Read Many)
+- FIPS validation (Federal Information Processing Standards)
