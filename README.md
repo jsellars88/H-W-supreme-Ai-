@@ -1,29 +1,70 @@
-# WhiteSwan Governance Kernel
+# Holmes & Watson Supreme AI Repository
 
-This repository contains the core implementation of the WhiteSwan Governance Kernel v3.1, a production reference implementation providing secure, tiered governance using Ed25519 operator signatures.
+This repository currently contains a **Flask-based web app** for rendering Holmes & Watson content cards from JSON data, plus a few legacy/experimental JavaScript entry points.
 
-## Repository Structure
+## What this repo actually includes
 
-- `src/`: Contains the main governance kernel logic.
-- `tests/`: Unit tests for the governance kernel.
-- `docs/`: Documentation including threat models, specifications, and deployment guides.
+- A runnable Flask service in `app/main.py`.
+- Jinja templates in `app/templates/`.
+- Post/content data in `data/posts.json`.
+- Supporting platform files (`requirements.txt`, `render.yaml`, `package.json`, etc.).
 
-## Features
+## Project Structure
 
-Key features of the governance kernel include:
-- Cryptographic authority enforcement with Ed25519.
-- Hash-chained audit logs for tamper evidence.
-- Role-based operator authorization with scope limits.
+```text
+app/
+  main.py                # Flask app and API routes
+  templates/
+    base.html            # Base page shell
+    index.html           # Card/grid rendering template
 
-## Getting Started
+data/
+  posts.json             # Source content rendered by Flask
 
-### Install Dependencies
-Run:
+requirements.txt         # Python dependencies (Flask, gunicorn)
+render.yaml              # Deployment config (Render)
+package.json             # Legacy/experimental Next.js metadata
+server.js                # Minimal Express test server
 ```
+
+## Runtime (Flask)
+
+### 1) Install dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-### Run Tests
+### 2) Start locally
+
+```bash
+python app/main.py
 ```
-pytest
-```
+
+The app runs on `http://localhost:8080` by default.
+
+## Available endpoints
+
+- `GET /` → Renders the HTML dashboard from `data/posts.json`.
+- `GET /api/posts` → Returns raw post JSON.
+
+## Data model (posts)
+
+Each post object in `data/posts.json` supports fields such as:
+
+- `id`
+- `title`
+- `topic`
+- `x`
+- `linkedin`
+- `facebook`
+- `visual_prompt`
+- `image`
+
+## Notes on JavaScript files
+
+This repository also includes JS/Node artifacts (`package.json`, `next.config.js`, `server.js`, `app.js`, etc.). At present, the primary implemented application path is the Flask app in `app/main.py`.
+
+## Release notes
+
+See `RELEASE_NOTES.md` for the latest governance-related release summary.
