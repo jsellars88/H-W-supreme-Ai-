@@ -65,6 +65,10 @@ Each post object in `data/posts.json` supports fields such as:
 
 This repository also includes JS/Node artifacts (`package.json`, `next.config.js`, `server.js`, `app.js`, etc.). At present, the primary implemented application path is the Flask app in `app/main.py`.
 
+## Architecture documentation
+
+For the latest constitutional architecture specification, see `WHITE_SWAN_OS_V3_5_ARCHITECTURE_GUIDE.md`.
+
 ## Release notes
 
 See `RELEASE_NOTES.md` for the latest governance-related release summary.
