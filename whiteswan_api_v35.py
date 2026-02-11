@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-WhiteSwan OS v3.5 — HTTP API Layer
-Holmes & Watson Supreme AI™
+WhiteSwan OS v3.5 - HTTP API Layer
+Holmes & Watson Supreme AI
 
 FastAPI server wrapping the unified v3.5 governance kernel.
 Extends v3.4 API surface with 11 new subsystem endpoints.
@@ -38,7 +38,7 @@ REQUIRE_AUTH_READONLY = False
 #  State -------------------------------------------------------------
 KERNEL: Optional[k35.WhiteSwanKernel35] = None
 # In-memory operator cache (production: HSM)
-OP_KEYS: Dict[str, bytes] = {}  # pubkey_hex → private_key_bytes
+OP_KEYS: Dict[str, bytes] = {}  # pubkey_hex -> private_key_bytes
 
 #  Lifespan ----------------------------------------------------------
 @asynccontextmanager
@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
         KERNEL.close()
 
 app = FastAPI(
-    title="WhiteSwan OS v3.5 — Defensive Governance API",
+    title="WhiteSwan OS v3.5 - Defensive Governance API",
     version=k35.SCHEMA_VERSION,
     lifespan=lifespan,
 )
