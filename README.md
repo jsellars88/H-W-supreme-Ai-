@@ -27,3 +27,15 @@ pip install -r requirements.txt
 ```
 pytest
 ```
+
+## WhiteSwan v3.5 API Layer
+
+The repository also contains `whiteswan_api_v35.py`, a FastAPI HTTP surface for the WhiteSwan governance kernel.
+
+Before running it, install API dependencies:
+
+```
+pip install -r requirements-whiteswan-api.txt
+```
+
+And ensure `kernel_v34` and `kernel_v35` are available on `PYTHONPATH` (these kernel modules are not bundled in this repository).
