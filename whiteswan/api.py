@@ -29,8 +29,8 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
 # ── Import v3.5 kernel (which includes v3.4) ─────────────────────────
-import kernel_v35 as k35
-import kernel_v34 as k34
+from whiteswan import kernel_v34 as k34
+from whiteswan import kernel_v35 as k35
 
 # ── Configuration ─────────────────────────────────────────────────────
 API_KEYS: set[str] = set()
@@ -39,14 +39,14 @@ REQUIRE_AUTH_READONLY = False
 # ── State ─────────────────────────────────────────────────────────────
 KERNEL: Optional[k35.WhiteSwanKernel35] = None
 # In-memory operator cache (production: HSM)
-OP_KEYS: Dict[str, bytes] = {{}}  # pubkey_hex → private_key_bytes
+OP_KEYS: Dict[str, bytes] = {}  # pubkey_hex → private_key_bytes
 
 # ── Lifespan ──────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global KERNEL, API_KEYS, REQUIRE_AUTH_READONLY
     raw = os.environ.get("WS_API_KEYS", "")
-    API_KEYS = {{k.strip() for k in raw.split(",") if k.strip()}}
+    API_KEYS = {k.strip() for k in raw.split(",") if k.strip()}
     REQUIRE_AUTH_READONLY = os.environ.get("WS_REQUIRE_AUTH_READONLY") == "1"
     db = os.environ.get("WS_DB_FILE", ":memory:")
     kf = os.environ.get("WS_KEY_FILE", ".ws35_key")
@@ -349,7 +349,7 @@ def seal_witness(request: Request):
     # Create seal then return latest
     KERNEL.vault.create_seal(KERNEL.gov._km.sign_hex)
     ss = KERNEL.vault.export_seals()
-    return ss[-1] if ss else {{}}
+    return ss[-1] if ss else {}
 
 # ── Trustees ──────────────────────────────────────────────────────────
 class TrusteeReq(BaseModel):

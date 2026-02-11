@@ -1,70 +1,46 @@
-# Holmes & Watson Supreme AI Repository
+# WhiteSwan OS — AI Governance Enforcement Middleware
 
-This repository currently contains a **Flask-based web app** for rendering Holmes & Watson content cards from JSON data, plus a few legacy/experimental JavaScript entry points.
+WhiteSwan OS is a constitutional AI governance layer for regulated systems.
+It provides policy-constrained authorization, cryptographic audit trails,
+operator identity controls, replayable decision records, and halt-on-violation
+mechanisms designed for high-assurance environments.
 
-## What this repo actually includes
-
-- A runnable Flask service in `app/main.py`.
-- Jinja templates in `app/templates/`.
-- Post/content data in `data/posts.json`.
-- Supporting platform files (`requirements.txt`, `render.yaml`, `package.json`, etc.).
-
-## Project Structure
+## Repository layout
 
 ```text
-app/
-  main.py                # Flask app and API routes
-  templates/
-    base.html            # Base page shell
-    index.html           # Card/grid rendering template
+whiteswan/                 Python package (governance product)
+  __init__.py
+  kernel_v34.py            Base governance kernel
+  kernel_v35.py            v3.5 subsystem layer
+  api.py                   FastAPI HTTP API
 
-data/
-  posts.json             # Source content rendered by Flask
+tests/                     Integration + unit tests
+  integration_test_v35.py
+  conftest.py
 
-requirements.txt         # Python dependencies (Flask, gunicorn)
-render.yaml              # Deployment config (Render)
-package.json             # Legacy/experimental Next.js metadata
-server.js                # Minimal Express test server
+docs/                      Architecture and API docs
+site/                      Marketing/demo website assets
 ```
 
-## Runtime (Flask)
-
-### 1) Install dependencies
+## Quick start
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[dev]"
+pytest tests/ -v
+uvicorn whiteswan.api:app --port 8000
 ```
 
-### 2) Start locally
+## Package usage
 
 ```bash
-python app/main.py
+pip install .
+python -c "import whiteswan; print(whiteswan.__version__)"
 ```
 
-The app runs on `http://localhost:8080` by default.
+## Compliance positioning
 
-## Available endpoints
+WhiteSwan OS is intended as enforcement middleware aligned to governance and
+risk-management frameworks (e.g., NIST AI RMF, regulated-sector controls,
+and auditability requirements).
 
-- `GET /` → Renders the HTML dashboard from `data/posts.json`.
-- `GET /api/posts` → Returns raw post JSON.
-
-## Data model (posts)
-
-Each post object in `data/posts.json` supports fields such as:
-
-- `id`
-- `title`
-- `topic`
-- `x`
-- `linkedin`
-- `facebook`
-- `visual_prompt`
-- `image`
-
-## Notes on JavaScript files
-
-This repository also includes JS/Node artifacts (`package.json`, `next.config.js`, `server.js`, `app.js`, etc.). At present, the primary implemented application path is the Flask app in `app/main.py`.
-
-## Release notes
-
-See `RELEASE_NOTES.md` for the latest governance-related release summary.
+See `docs/ARCHITECTURE.md` and `docs/API.md` for technical details.
