@@ -1,33 +1,19 @@
-# Holmes & Watson Supreme AI Repository
+# WhiteSwan OS v3.5 — Holmes & Watson Supreme AI
 
-This repository currently contains a **Flask-based web app** for rendering Holmes & Watson content cards from JSON data, plus a few legacy/experimental JavaScript entry points.
+WhiteSwan OS is a governance enforcement middleware that authorizes (or blocks) AI actions before they reach a model provider. It enforces constitutional invariants, records cryptographic evidence capsules, and enters Safe Arrest State (SAS) when uncertainty or policy violations are detected.
 
-## What this repo actually includes
+## What this repository includes
 
-- A runnable Flask service in `app/main.py`.
-- Jinja templates in `app/templates/`.
-- Post/content data in `data/posts.json`.
-- Supporting platform files (`requirements.txt`, `render.yaml`, `package.json`, etc.).
+- `whiteswan_api_v35.py` — FastAPI service exposing governance endpoints.
+- `kernel_v35.py` — v3.5 constitutional governance kernel implementation.
+- `integration_test_v35.py` — end-to-end governance harness covering cross-subsystem checks.
+- `tests/test_whiteswan_governance_kernel.py` — focused regression tests for core kernel behavior.
+- `WHITE_SWAN_OS_V3_5_ARCHITECTURE_GUIDE.md` — architecture and subsystem guide.
+- `RELEASE_NOTES.md` — release and mergeability notes.
 
-## Project Structure
+Legacy web artifacts (`index.html`, `style.css`, `app.js`, etc.) remain in-repo, but the primary maintained runtime is WhiteSwan OS governance middleware.
 
-```text
-app/
-  main.py                # Flask app and API routes
-  templates/
-    base.html            # Base page shell
-    index.html           # Card/grid rendering template
-
-data/
-  posts.json             # Source content rendered by Flask
-
-requirements.txt         # Python dependencies (Flask, gunicorn)
-render.yaml              # Deployment config (Render)
-package.json             # Legacy/experimental Next.js metadata
-server.js                # Minimal Express test server
-```
-
-## Runtime (Flask)
+## Quick start
 
 ### 1) Install dependencies
 
@@ -35,40 +21,36 @@ server.js                # Minimal Express test server
 pip install -r requirements.txt
 ```
 
-### 2) Start locally
+For full v3.5 API dependencies (FastAPI stack), use:
 
 ```bash
-python app/main.py
+pip install -e .
 ```
 
-The app runs on `http://localhost:8080` by default.
+### 2) Run the API
 
-## Available endpoints
+```bash
+python whiteswan_api_v35.py
+```
 
-- `GET /` → Renders the HTML dashboard from `data/posts.json`.
-- `GET /api/posts` → Returns raw post JSON.
+By default, the API binds to `http://0.0.0.0:8000`.
 
-## Data model (posts)
+### 3) Run tests
 
-Each post object in `data/posts.json` supports fields such as:
+```bash
+PYTHONPATH=. pytest -q
+```
 
-- `id`
-- `title`
-- `topic`
-- `x`
-- `linkedin`
-- `facebook`
-- `visual_prompt`
-- `image`
+Optional full integration harness:
 
-## Notes on JavaScript files
-
-This repository also includes JS/Node artifacts (`package.json`, `next.config.js`, `server.js`, `app.js`, etc.). At present, the primary implemented application path is the Flask app in `app/main.py`.
+```bash
+python integration_test_v35.py
+```
 
 ## Architecture documentation
 
-For the latest constitutional architecture specification, see `WHITE_SWAN_OS_V3_5_ARCHITECTURE_GUIDE.md`.
+See `WHITE_SWAN_OS_V3_5_ARCHITECTURE_GUIDE.md` for the constitutional architecture specification (tiers, invariants, SAS, subsystems, API groups, and deployment model).
 
 ## Release notes
 
-See `RELEASE_NOTES.md` for the latest governance-related release summary.
+See `RELEASE_NOTES.md` for release and mergeability history.

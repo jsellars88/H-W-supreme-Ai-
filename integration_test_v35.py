@@ -23,7 +23,7 @@ from contextlib import contextmanager
 from fastapi.testclient import TestClient
 
 # Must import AFTER env is set
-from app_v35 import app
+from whiteswan_api_v35 import app
 
 PASS = 0
 FAIL = 0
