@@ -1,17 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WhiteSwan OS v3.5 — GSN Assurance Case</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --goal: #1e3a5f;
+    --goal-border: #3b82f6;
+    --strat: #1a3d2e;
+    --strat-border: #22c55e;
+    --soln: #3d2e0a;
+    --soln-border: #f59e0b;
+    --ctx: #2d1b4e;
+    --ctx-border: #a855f7;
+    --assump: #1e293b;
+    --assump-border: #64748b;
+    --verified: #22c55e;
+    --accent: #60a5fa;
+  }
 
-{% extends "base.html" %}
-{% block content %}
-  <div class="grid">
-    {% for p in posts %}
-      <div class="card">
-        <div class="topic">POST #{{p.id}} — {{p.title}}</div>
-        {% if p.image %}<img class="thumb" src="{{ url_for('static', filename='images/' + p.image) }}" alt="image">{% endif %}
-        <div class="post"><strong>X:</strong> {{p.x}}</div>
-        <div class="post" style="margin-top:8px;"><strong>LinkedIn:</strong> {{p.linkedin}}</div>
-        <div class="post" style="margin-top:8px;"><strong>Facebook:</strong> {{p.facebook}}</div>
-        <div class="prompt"><strong>Visual Prompt</strong>
-{{p.visual_prompt}}</div>
-      </div>
-    {% endfor %}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  .header {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header h1 span { color: var(--accent); }
+  .header .meta { font-size: 12px; color: var(--text2); }
+  .header .badge {
+    background: rgba(34,197,94,0.15); color: var(--verified);
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    border: 1px solid rgba(34,197,94,0.3);
+  }
+
+  .stats-bar {
+    display: flex; gap: 32px; padding: 16px 40px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .stat { text-align: center; }
+  .stat .val { font-size: 24px; font-weight: 700; color: var(--accent); }
+  .stat .lbl { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+  .canvas { padding: 32px 40px; }
+
+  .level { margin-bottom: 24px; }
+  .level-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 2px; color: var(--text2); margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .nodes { display: flex; flex-wrap: wrap; gap: 12px; }
+
+  .node {
+    border-radius: 8px; padding: 14px 18px; cursor: pointer;
+    transition: all 0.2s ease; position: relative; min-width: 160px; max-width: 320px;
+    flex: 1 1 auto;
+  }
+  .node:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+
+  .node.goal { background: var(--goal); border: 1px solid var(--goal-border); }
+  .node.strategy { background: var(--strat); border: 1px solid var(--strat-border); border-radius: 4px 20px 4px 20px; }
+  .node.solution { background: var(--soln); border: 1px solid var(--soln-border); }
+  .node.context { background: var(--ctx); border: 1px solid var(--ctx-border); border-radius: 16px; }
+  .node.assumption { background: var(--assump); border: 1px solid var(--assump-border); border-radius: 16px; }
+
+  .node .id { font-size: 11px; font-weight: 700; margin-bottom: 4px; opacity: 0.7; }
+  .node.goal .id { color: var(--goal-border); }
+  .node.strategy .id { color: var(--strat-border); }
+  .node.solution .id { color: var(--soln-border); }
+  .node.context .id { color: var(--ctx-border); }
+
+  .node .text { font-size: 12px; line-height: 1.5; }
+  .node .status {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 9px; font-weight: 700; color: var(--verified);
+  }
+
+  .detail-panel {
+    display: none; position: fixed; top: 0; right: 0;
+    width: 420px; height: 100vh; background: var(--surface);
+    border-left: 1px solid var(--border); padding: 24px;
+    overflow-y: auto; z-index: 100;
+    box-shadow: -8px 0 32px rgba(0,0,0,0.5);
+  }
+  .detail-panel.open { display: block; }
+  .detail-panel .close {
+    position: absolute; top: 16px; right: 16px;
+    background: none; border: none; color: var(--text2);
+    font-size: 20px; cursor: pointer;
+  }
+  .detail-panel h2 { font-size: 16px; margin-bottom: 16px; color: var(--accent); }
+  .detail-panel .field { margin-bottom: 12px; }
+  .detail-panel .field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text2); margin-bottom: 4px; }
+  .detail-panel .field-value { font-size: 13px; line-height: 1.6; }
+
+  .evidence-item {
+    background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 6px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .evidence-item .eid { font-size: 10px; font-weight: 700; color: var(--soln-border); }
+  .evidence-item .edesc { font-size: 12px; margin-top: 2px; }
+  .evidence-item .esrc { font-size: 10px; color: var(--text2); margin-top: 4px; }
+  .evidence-item .estatus { font-size: 10px; font-weight: 700; color: var(--verified); }
+
+  .connector-hint {
+    display: flex; align-items: center; gap: 8px; margin: 8px 0 8px 20px;
+    font-size: 10px; color: var(--text2);
+  }
+  .connector-hint .arrow { width: 24px; border-top: 1px dashed var(--text2); }
+
+  .section-divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 32px 0 24px;
+  }
+
+  .legend {
+    display: flex; gap: 20px; padding: 12px 40px;
+    background: rgba(17,24,39,0.8); border-top: 1px solid var(--border);
+    position: fixed; bottom: 0; left: 0; right: 0;
+    backdrop-filter: blur(8px);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text2); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .nodes { flex-direction: column; }
+    .node { max-width: 100%; }
+    .detail-panel { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1><span>WhiteSwan OS v3.5</span> — GSN Assurance Case</h1>
+    <div class="meta">HWS-GSN-AC-2026-001 | Holmes & Watson Supreme AI | February 2026</div>
   </div>
-{% endblock %}
+  <div class="badge">57/57 EVIDENCE VERIFIED</div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="val">13</div><div class="lbl">Goals</div></div>
+  <div class="stat"><div class="val">10</div><div class="lbl">Strategies</div></div>
+  <div class="stat"><div class="val">57</div><div class="lbl">Evidence Items</div></div>
+  <div class="stat"><div class="val">8</div><div class="lbl">Invariants</div></div>
+  <div class="stat"><div class="val">70</div><div class="lbl">Tests</div></div>
+  <div class="stat"><div class="val">11</div><div class="lbl">Subsystems</div></div>
+  <div class="stat"><div class="val">100%</div><div class="lbl">Coverage</div></div>
+</div>
+
+<div class="canvas" id="canvas"></div>
+
+<div class="detail-panel" id="detail">
+  <button class="close" onclick="closeDetail()">&times;</button>
+  <div id="detail-content"></div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--goal-border)"></div>Goal (Claim)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--strat-border)"></div>Strategy</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--soln-border)"></div>Evidence</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--ctx-border)"></div>Context</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--assump-border)"></div>Assumption</div>
+</div>
+
+<script>
+const data = {
+  g0: {
+    type: "goal", id: "G0", title: "System-Level Safety Claim",
+    text: "WhiteSwan OS prevents unauthorized, unaccountable, or irreversible AI action under all operational conditions.",
+    detail: "Scope: All AI operations governed by WhiteSwan OS, across all federated kernels, all operator tiers (T1-T4), all model providers, all geofence jurisdictions.\n\nDecomposed via S1 (Invariant Argument) and S2 (Operational Completeness).",
+    children: ["s1", "s2"],
+    context: ["c1", "c2", "c3", "a1", "a2", "j1"]
+  },
+  c1: { type: "context", id: "C1", text: "WhiteSwan operates as middleware above AI model providers, enforcing governance at the instruction layer." },
+  c2: { type: "context", id: "C2", text: "System targets regulated industries: defense, healthcare, financial services, critical infrastructure." },
+  c3: { type: "context", id: "C3", text: "Kernel v3.5: 11 subsystems, 70 integration tests, 52 HTTP API endpoints." },
+  a1: { type: "assumption", id: "A1", text: "Hardware root of trust (TPM 2.0, HSM FIPS 140-3 L3) functions correctly when not degraded." },
+  a2: { type: "assumption", id: "A2", text: "Cryptographic primitives (Ed25519, SHA-256) remain secure during operational lifetime." },
+  j1: { type: "context", id: "J1", text: "Justification: Invariant decomposition is appropriate because violation of any single invariant invalidates G0." },
+
+  s1: {
+    type: "strategy", id: "S1", title: "Argument Over Constitutional Invariants",
+    text: "8 invariants are individually enforceable, collectively complete, and their conjunction establishes G0.",
+    children: ["g1","g2","g3","g4","g5","g6","g7","g8"]
+  },
+  s2: {
+    type: "strategy", id: "S2", title: "Argument Over Operational Completeness",
+    text: "Operational subsystems provide complete governance coverage under real-world conditions.",
+    children: ["g9","g10","g11","g12","g13"]
+  },
+
+  g1: {
+    type: "goal", id: "G1", title: "I-1: No Single Actor Authorization",
+    text: "All T4 actions require TPI challenge-response AND MKC dual-kernel consensus.",
+    invariant: "I-1", subsystems: "TPI, MKC, HSM",
+    evidence: [
+      { id: "Sn-01", desc: "TPI challenge-response completes", src: "test 30-31", status: "VERIFIED" },
+      { id: "Sn-02", desc: "TPI status with TTL enforcement", src: "test 32", status: "VERIFIED" },
+      { id: "Sn-03", desc: "T4 consensus requires 2+ kernels", src: "test 36", status: "VERIFIED" },
+      { id: "Sn-04", desc: "Solo kernel blocks T4", src: "MKC.request_t4_consensus()", status: "VERIFIED" },
+      { id: "Sn-05", desc: "HSM M-of-N key rotation", src: "test 27", status: "VERIFIED" },
+      { id: "Sn-06", desc: "Rollback blocked without TPI", src: "test 66", status: "VERIFIED" }
+    ]
+  },
+  g2: {
+    type: "goal", id: "G2", title: "I-2: Cryptographic Authority Required",
+    text: "Every operation requires valid GOVERNOR_ENVELOPE with Ed25519 signature chain.",
+    invariant: "I-2", subsystems: "Governor, HSM",
+    evidence: [
+      { id: "Sn-07", desc: "API rejects without auth", src: "test 2", status: "VERIFIED" },
+      { id: "Sn-08", desc: "Operator Ed25519 key generation", src: "test 4", status: "VERIFIED" },
+      { id: "Sn-09", desc: "Session binds operator identity", src: "test 5", status: "VERIFIED" },
+      { id: "Sn-10", desc: "Handshake produces signed envelope", src: "test 6", status: "VERIFIED" },
+      { id: "Sn-11", desc: "Authorization validates signature", src: "test 7", status: "VERIFIED" },
+      { id: "Sn-12", desc: "HSM FIPS 140-3 key storage", src: "HSMKeyCustody", status: "VERIFIED" }
+    ]
+  },
+  g3: {
+    type: "goal", id: "G3", title: "I-3: Evidence-Bound Authority",
+    text: "Every decision captured in immutable Guardian Vault X with Merkle proof chain.",
+    invariant: "I-3", subsystems: "Vault, CEF",
+    evidence: [
+      { id: "Sn-13", desc: "Evidence capsules for every decision", src: "test 9", status: "VERIFIED" },
+      { id: "Sn-14", desc: "Vault audit seals tamper-evident", src: "test 10", status: "VERIFIED" },
+      { id: "Sn-15", desc: "CEF contains complete evidence", src: "tests 56-65", status: "VERIFIED" },
+      { id: "Sn-16", desc: "Forensics reconstructs timeline", src: "test 50", status: "VERIFIED" }
+    ]
+  },
+  g4: {
+    type: "goal", id: "G4", title: "I-4: Quorum-Protected Recovery",
+    text: "Rollback, SAS exit, and restoration require TPI + MKC + quorum trustee approval.",
+    invariant: "I-4", subsystems: "CRP, TPI, MKC",
+    evidence: [
+      { id: "Sn-17", desc: "Rollback requires TPI", src: "test 38", status: "VERIFIED" },
+      { id: "Sn-18", desc: "Rollback blocked without TPI", src: "test 66", status: "VERIFIED" },
+      { id: "Sn-19", desc: "Rollback permanently recorded", src: "test 40", status: "VERIFIED" },
+      { id: "Sn-20", desc: "SAS entry recorded in CEL", src: "test 67", status: "VERIFIED" }
+    ]
+  },
+  g5: {
+    type: "goal", id: "G5", title: "I-5: Invalidation-Bound Policy Changes",
+    text: "Policy changes immediately invalidate all sessions; no stale authority persists.",
+    invariant: "I-5", subsystems: "CRP, CSM",
+    evidence: [
+      { id: "Sn-21", desc: "Rollback invalidates sessions", src: "CRP.execute_rollback()", status: "VERIFIED" },
+      { id: "Sn-22", desc: "Policy migration pre-validation", src: "test 47", status: "VERIFIED" },
+      { id: "Sn-23", desc: "Simulation side-effect free", src: "test 69", status: "VERIFIED" }
+    ]
+  },
+  g6: {
+    type: "goal", id: "G6", title: "I-6: Observable Failure",
+    text: "Every event logged in telemetry; CLG watchdog enforces liveness; GFE detects anomalies.",
+    invariant: "I-6", subsystems: "CLG, Telemetry, GFE",
+    evidence: [
+      { id: "Sn-24", desc: "Liveness events recorded/checked", src: "tests 41-42", status: "VERIFIED" },
+      { id: "Sn-25", desc: "Telemetry exports governance metrics", src: "test 15", status: "VERIFIED" },
+      { id: "Sn-26", desc: "Anomaly detection in patterns", src: "test 54", status: "VERIFIED" },
+      { id: "Sn-27", desc: "Signed forensic audit reports", src: "test 55", status: "VERIFIED" }
+    ]
+  },
+  g7: {
+    type: "goal", id: "G7", title: "I-7: Verifiable State",
+    text: "TPM measured boot, runtime re-attestation; unattestable state treated as compromised.",
+    invariant: "I-7", subsystems: "Attestation, HSM",
+    evidence: [
+      { id: "Sn-28", desc: "Boot attestation PCR measurements", src: "test 28", status: "VERIFIED" },
+      { id: "Sn-29", desc: "Runtime re-attestation validates", src: "test 29", status: "VERIFIED" },
+      { id: "Sn-30", desc: "CEF includes attestation records", src: "test 68", status: "VERIFIED" },
+      { id: "Sn-31", desc: "HSM manifest key inventory", src: "test 26", status: "VERIFIED" }
+    ]
+  },
+  g8: {
+    type: "goal", id: "G8", title: "I-8: Halt on Uncertainty",
+    text: "Any uncertain/violated condition triggers SAS. Triggers: drift, attestation, liveness, invariant, economic threshold.",
+    invariant: "I-8", subsystems: "SAS, CEL",
+    evidence: [
+      { id: "Sn-32", desc: "SAS halts operations", src: "test 12", status: "VERIFIED" },
+      { id: "Sn-33", desc: "SAS exit requires recovery", src: "test 13", status: "VERIFIED" },
+      { id: "Sn-34", desc: "SAS events in risk ledger", src: "test 67", status: "VERIFIED" },
+      { id: "Sn-35", desc: "SAS root causes classifiable", src: "test 53", status: "VERIFIED" },
+      { id: "Sn-36", desc: "Simulation tests SAS safely", src: "test 46", status: "VERIFIED" }
+    ]
+  },
+  g9: {
+    type: "goal", id: "G9", title: "Federated Identity Integrity",
+    text: "Tamper-evident portable operator identities with cross-kernel revocation propagation.",
+    subsystems: "GIF",
+    evidence: [
+      { id: "Sn-37", desc: "Signed portable identity objects", src: "test 43", status: "VERIFIED" },
+      { id: "Sn-38", desc: "Revocation propagates across federation", src: "GIF.revoke_identity()", status: "VERIFIED" },
+      { id: "Sn-39", desc: "Federation peer health monitored", src: "test 34", status: "VERIFIED" }
+    ]
+  },
+  g10: {
+    type: "goal", id: "G10", title: "Risk Accounting Accuracy",
+    text: "CEL tracks institutional risk costs for every governance event; enables insurance modeling.",
+    subsystems: "CEL",
+    evidence: [
+      { id: "Sn-40", desc: "Risk events with cost weights", src: "test 44", status: "VERIFIED" },
+      { id: "Sn-41", desc: "Reports by operator/model/kernel/time", src: "test 44", status: "VERIFIED" },
+      { id: "Sn-42", desc: "CEF includes risk metrics", src: "test 60", status: "VERIFIED" }
+    ]
+  },
+  g11: {
+    type: "goal", id: "G11", title: "Simulation Fidelity",
+    text: "CSM provides full-fidelity governance evaluation without side effects.",
+    subsystems: "CSM",
+    evidence: [
+      { id: "Sn-43", desc: "Simulated auth without execution", src: "test 45", status: "VERIFIED" },
+      { id: "Sn-44", desc: "Simulated SAS no real activation", src: "test 49", status: "VERIFIED" },
+      { id: "Sn-45", desc: "Zero side effects confirmed", src: "test 69", status: "VERIFIED" }
+    ]
+  },
+  g12: {
+    type: "goal", id: "G12", title: "Forensic Reconstructability",
+    text: "GFE enables complete post-hoc reconstruction: timeline, clustering, drift, SAS root-cause.",
+    subsystems: "GFE",
+    evidence: [
+      { id: "Sn-46", desc: "Timeline reconstruction", src: "test 50", status: "VERIFIED" },
+      { id: "Sn-47", desc: "Operator activity clustering", src: "test 51", status: "VERIFIED" },
+      { id: "Sn-48", desc: "Drift pattern analysis", src: "test 52", status: "VERIFIED" },
+      { id: "Sn-49", desc: "SAS root-cause classification", src: "test 53", status: "VERIFIED" },
+      { id: "Sn-50", desc: "Anomaly detection", src: "test 54", status: "VERIFIED" }
+    ]
+  },
+  g13: {
+    type: "goal", id: "G13", title: "Regulatory Export Completeness",
+    text: "CEF produces single signed artifact for NIST RMF, CNSSI 1253, ISO 42001, EU AI Act Annex IV.",
+    subsystems: "CEF",
+    evidence: [
+      { id: "Sn-51", desc: "Kernel identity + config", src: "test 57", status: "VERIFIED" },
+      { id: "Sn-52", desc: "Complete policy history", src: "test 58", status: "VERIFIED" },
+      { id: "Sn-53", desc: "Audit seal chain", src: "test 59", status: "VERIFIED" },
+      { id: "Sn-54", desc: "Federation state", src: "test 61", status: "VERIFIED" },
+      { id: "Sn-55", desc: "HSM key manifest", src: "test 62", status: "VERIFIED" },
+      { id: "Sn-56", desc: "Compliance target mapping", src: "test 64", status: "VERIFIED" },
+      { id: "Sn-57", desc: "Cryptographically signed", src: "test 65", status: "VERIFIED" }
+    ]
+  }
+};
+
+function renderCanvas() {
+  const c = document.getElementById('canvas');
+  c.innerHTML = '';
+
+  // Level 0: Top Goal + Context
+  c.innerHTML += levelHTML("Top-Level Safety Claim", ["g0"]);
+  c.innerHTML += levelHTML("Context & Assumptions", ["c1","c2","c3","a1","a2","j1"]);
+  c.innerHTML += '<div class="connector-hint"><div class="arrow"></div>decomposes via</div>';
+  c.innerHTML += levelHTML("Decomposition Strategies", ["s1","s2"]);
+  c.innerHTML += '<hr class="section-divider">';
+
+  // S1 children
+  c.innerHTML += '<div class="connector-hint"><div class="arrow"></div>S1 decomposes into 8 invariant goals</div>';
+  c.innerHTML += levelHTML("Invariant Goals (I-1 through I-8)", ["g1","g2","g3","g4","g5","g6","g7","g8"]);
+  c.innerHTML += '<hr class="section-divider">';
+
+  // S2 children
+  c.innerHTML += '<div class="connector-hint"><div class="arrow"></div>S2 decomposes into 5 operational goals</div>';
+  c.innerHTML += levelHTML("Operational Completeness Goals", ["g9","g10","g11","g12","g13"]);
+}
+
+function levelHTML(label, ids) {
+  let html = `<div class="level"><div class="level-label">${label}</div><div class="nodes">`;
+  for (const id of ids) {
+    const n = data[id];
+    html += `<div class="node ${n.type}" onclick="showDetail('${id}')">`;
+    html += `<div class="id">${n.id}</div>`;
+    if (n.title) html += `<div class="text" style="font-weight:600;margin-bottom:4px">${n.title}</div>`;
+    html += `<div class="text">${n.text}</div>`;
+    if (n.evidence) html += `<div class="status">${n.evidence.length} evidence ✓</div>`;
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function showDetail(id) {
+  const n = data[id];
+  const panel = document.getElementById('detail');
+  const content = document.getElementById('detail-content');
+  let html = `<h2>${n.id}: ${n.title || ''}</h2>`;
+  html += `<div class="field"><div class="field-label">Type</div><div class="field-value">${n.type.toUpperCase()}</div></div>`;
+  html += `<div class="field"><div class="field-label">Statement</div><div class="field-value">${n.text}</div></div>`;
+  if (n.invariant) html += `<div class="field"><div class="field-label">Invariant</div><div class="field-value">${n.invariant}</div></div>`;
+  if (n.subsystems) html += `<div class="field"><div class="field-label">Subsystems</div><div class="field-value">${n.subsystems}</div></div>`;
+  if (n.detail) html += `<div class="field"><div class="field-label">Detail</div><div class="field-value" style="white-space:pre-line">${n.detail}</div></div>`;
+  if (n.children) html += `<div class="field"><div class="field-label">Decomposes Into</div><div class="field-value">${n.children.map(c => data[c].id).join(', ')}</div></div>`;
+  if (n.evidence) {
+    html += `<div class="field"><div class="field-label">Evidence (${n.evidence.length} items)</div></div>`;
+    for (const e of n.evidence) {
+      html += `<div class="evidence-item">
+        <div style="display:flex;justify-content:space-between"><span class="eid">${e.id}</span><span class="estatus">${e.status}</span></div>
+        <div class="edesc">${e.desc}</div>
+        <div class="esrc">Source: ${e.src}</div>
+      </div>`;
+    }
+  }
+  content.innerHTML = html;
+  panel.classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+renderCanvas();
+</script>
+</body>
+</html>
