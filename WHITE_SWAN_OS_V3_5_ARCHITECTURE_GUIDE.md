@@ -94,7 +94,7 @@ SAS triggers include: invariant violation, drift threshold exceeded, attestation
 
 ## API Layer
 
-FastAPI HTTP server exposing 52 endpoints with API key authentication (read/write separation).
+FastAPI HTTP server exposing **62 HTTP endpoints** with API key authentication (read/write separation).
 
 Endpoint groups:
 
@@ -127,7 +127,7 @@ The governance kernel authorizes (or refuses) each request before it reaches the
 
 ## Testing
 
-70 integration tests verify all subsystems and cross-subsystem interactions:
+A dedicated integration harness executes **70 governance checks** that verify all subsystems and cross-subsystem interactions:
 
 - Boot health and invariant verification
 - Authentication enforcement
@@ -147,3 +147,10 @@ The governance kernel authorizes (or refuses) each request before it reaches the
 - Forensics (timeline, operators, drift, SAS causes, anomalies)
 - CEF export (all sections + cryptographic signature)
 - Cross-subsystem integration (TPI↔rollback, CEL↔SAS, CEF↔attestation, simulation side-effects)
+
+
+Run it locally with:
+
+```bash
+python integration_test_v35.py
+```
