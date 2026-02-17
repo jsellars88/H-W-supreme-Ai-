@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.ws35_key
+.whiteswan_kernel_key
+*.db
+.pytest_cache/
