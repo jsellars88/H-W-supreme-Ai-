@@ -497,5 +497,314 @@ def reattest(request: Request):
     result = mba.attest()
     return asdict(result)
 
-# The rest of the v3.5 subsystems follow the same guarded pattern.
-# Add them when kernel_v35 implements: tpi, mkc, crp, clg, gif, cel, csm, gfe, cef.
+# ── §5 Two-Person Integrity (TPI) ─────────────────────────────────────
+
+class TPIInitiateReq(BaseModel):
+    scope: str
+    initiator_pubkey: str
+    evidence: Optional[Dict[str, Any]] = None
+
+@app.post("/v1/tpi/initiate")
+def tpi_initiate(body: TPIInitiateReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    tpi = _require_attr(ker, "tpi", "tpi")
+    scope_enum = getattr(k35, "TPIScope")(body.scope)
+    ch = tpi.initiate(scope_enum, body.initiator_pubkey, body.evidence)
+    return asdict(ch)
+
+class TPICompleteReq(BaseModel):
+    challenge_id: str
+    completer_pubkey: str
+    completer_sig: str = ""
+
+@app.post("/v1/tpi/complete")
+def tpi_complete(body: TPICompleteReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    tpi = _require_attr(ker, "tpi", "tpi")
+    ok, msg = tpi.complete(body.challenge_id, body.completer_pubkey, body.completer_sig)
+    return {"ok": ok, "message": msg}
+
+@app.get("/v1/tpi/challenge/{challenge_id}")
+def tpi_get_challenge(challenge_id: str, request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    tpi = _require_attr(ker, "tpi", "tpi")
+    ch = tpi.get_challenge(challenge_id)
+    if not ch:
+        raise HTTPException(404, "challenge_not_found")
+    return asdict(ch)
+
+# ── §6 Multi-Kernel Consensus (MKC) ──────────────────────────────────
+
+class PeerRegisterReq(BaseModel):
+    kernel_id: str
+    pubkey_hex: str
+    endpoint: str
+    policy_version: str = "1.0"
+
+@app.post("/v1/federation/peers")
+def register_peer(body: PeerRegisterReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    mkc = _require_attr(ker, "mkc", "federation")
+    peer = k35.PeerKernel(
+        kernel_id=body.kernel_id, pubkey_hex=body.pubkey_hex,
+        endpoint=body.endpoint, policy_version=body.policy_version,
+        last_seen=k35.now_z(),
+    )
+    mkc.register_peer(peer)
+    return asdict(peer)
+
+@app.get("/v1/federation/health")
+def federation_health(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    mkc = _require_attr(ker, "mkc", "federation")
+    return mkc.federation_health()
+
+@app.get("/v1/federation/verify/{kernel_id}")
+def verify_peer(kernel_id: str, request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    mkc = _require_attr(ker, "mkc", "federation")
+    return mkc.verify_peer(kernel_id)
+
+class QuarantineReq(BaseModel):
+    kernel_id: str
+    reason: str
+
+@app.post("/v1/federation/quarantine")
+def quarantine_peer(body: QuarantineReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    mkc = _require_attr(ker, "mkc", "federation")
+    mkc.quarantine_peer(body.kernel_id, body.reason)
+    return {"quarantined": body.kernel_id, "reason": body.reason}
+
+@app.get("/v1/federation/consensus")
+def federation_consensus(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    mkc = _require_attr(ker, "mkc", "federation")
+    ok, msg = mkc.check_t4_consensus()
+    return {"consensus": ok, "message": msg}
+
+# ── §7 Constitutional Rollback Protocol (CRP) ────────────────────────
+
+class RollbackInitReq(BaseModel):
+    reason: str
+    from_policy: str
+    to_policy: str
+    initiator_pubkey: str
+
+@app.post("/v1/rollback/initiate")
+def rollback_initiate(body: RollbackInitReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    crp = _require_attr(ker, "crp", "rollback")
+    rid, tpi_id = crp.initiate(body.reason, body.from_policy, body.to_policy, body.initiator_pubkey)
+    return {"rollback_id": rid, "tpi_challenge_id": tpi_id}
+
+class RollbackExecReq(BaseModel):
+    rollback_id: str
+
+@app.post("/v1/rollback/execute")
+def rollback_execute(body: RollbackExecReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    crp = _require_attr(ker, "crp", "rollback")
+    ok, msg = crp.execute(body.rollback_id)
+    return {"ok": ok, "message": msg}
+
+@app.get("/v1/rollback/history")
+def rollback_history(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    crp = _require_attr(ker, "crp", "rollback")
+    return crp.history()
+
+# ── §8 Constitutional Liveness Guarantees (CLG) ──────────────────────
+
+class LivenessReq(BaseModel):
+    event: str
+
+@app.post("/v1/liveness/record")
+def liveness_record(body: LivenessReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    clg = _require_attr(ker, "clg", "liveness")
+    event_enum = getattr(k35, "LivenessEvent")(body.event)
+    clg.record_event(event_enum)
+    return {"recorded": body.event}
+
+@app.get("/v1/liveness/check")
+def liveness_check(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    clg = _require_attr(ker, "clg", "liveness")
+    return clg.check_all()
+
+# ── §9 Governance Identity Federation (GIF) ──────────────────────────
+
+class FederatedIdentityReq(BaseModel):
+    operator_pubkey: str
+
+@app.post("/v1/federation/identities")
+def issue_federated_identity(body: FederatedIdentityReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    gif = _require_attr(ker, "gif", "federation_identity")
+    rec = ker.gov._get_operator_record(body.operator_pubkey)
+    if not rec:
+        raise HTTPException(404, "operator_not_found")
+    fid = gif.issue_portable_identity(rec)
+    return asdict(fid)
+
+@app.get("/v1/federation/identities")
+def list_federated_identities(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gif = _require_attr(ker, "gif", "federation_identity")
+    return gif.list_identities()
+
+@app.get("/v1/federation/revocations")
+def federated_revocations(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gif = _require_attr(ker, "gif", "federation_identity")
+    return gif.get_revocations()
+
+# ── §10 Constitutional Economics Layer (CEL) ─────────────────────────
+
+class RiskEventReq(BaseModel):
+    event_type: str
+    operator_id: Optional[str] = None
+    model_id: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+
+@app.post("/v1/risk/record")
+def risk_record(body: RiskEventReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    cel = _require_attr(ker, "cel", "risk")
+    event_enum = getattr(k35, "RiskEventType")(body.event_type)
+    cost = cel.record(event_enum, body.operator_id, body.model_id, body.details)
+    return asdict(cost)
+
+@app.get("/v1/risk/report")
+def risk_report(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    cel = _require_attr(ker, "cel", "risk")
+    return cel.risk_report()
+
+@app.get("/v1/risk/events")
+def risk_events(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    cel = _require_attr(ker, "cel", "risk")
+    return cel.export_events()
+
+# ── §11 Constitutional Simulation Mode (CSM) ─────────────────────────
+
+class SimAuthorizeReq(BaseModel):
+    scope: str
+    nonce: str
+    scenario: str = "default"
+    model_ctx: Optional[Dict[str, Any]] = None
+
+@app.post("/v1/simulate/authorize")
+def simulate_authorize(body: SimAuthorizeReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    csm = _require_attr(ker, "csm", "simulate")
+    scope = k34.ActionScope(body.scope)
+    mc = k34.ModelContext(**body.model_ctx) if body.model_ctx else None
+    result = csm.simulate_authorize(scope, body.nonce, body.scenario, mc)
+    return asdict(result)
+
+class SimSASReq(BaseModel):
+    reason: str = "drill"
+
+@app.post("/v1/simulate/sas")
+def simulate_sas(body: SimSASReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    csm = _require_attr(ker, "csm", "simulate")
+    result = csm.simulate_sas(body.reason)
+    return asdict(result)
+
+class SimPolicyReq(BaseModel):
+    from_version: str
+    to_version: str
+
+@app.post("/v1/simulate/policy")
+def simulate_policy(body: SimPolicyReq, request: Request):
+    _check_auth(request, write=True)
+    ker = _require_kernel()
+    csm = _require_attr(ker, "csm", "simulate")
+    result = csm.simulate_policy_migration(body.from_version, body.to_version)
+    return asdict(result)
+
+@app.get("/v1/simulate/history")
+def simulate_history(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    csm = _require_attr(ker, "csm", "simulate")
+    return csm.history()
+
+# ── §12 Governance Forensics Engine (GFE) ────────────────────────────
+
+@app.get("/v1/forensics/timeline")
+def forensics_timeline(request: Request, stream: Optional[str] = None,
+                       start: Optional[str] = None, end: Optional[str] = None):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.timeline_replay(start=start, end=end, stream=stream)
+
+@app.get("/v1/forensics/clustering")
+def forensics_clustering(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.operator_behavior_clustering()
+
+@app.get("/v1/forensics/drift")
+def forensics_drift(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.drift_pattern_analysis()
+
+@app.get("/v1/forensics/sas")
+def forensics_sas(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.sas_root_cause()
+
+@app.get("/v1/forensics/anomalies")
+def forensics_anomalies(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.anomaly_correlation()
+
+@app.get("/v1/forensics/report")
+def forensics_report(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    gfe = _require_attr(ker, "gfe", "forensics")
+    return gfe.export_signed_report()
+
+# ── §13 Constitutional Export Format (CEF) ────────────────────────────
+
+@app.get("/v1/cef/export")
+def cef_export(request: Request):
+    _check_auth(request, write=False)
+    ker = _require_kernel()
+    cef = _require_attr(ker, "cef", "cef")
+    return cef.export()
