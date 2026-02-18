@@ -6,6 +6,7 @@ __pycache__/
 *.key
 .ws35_key
 .whiteswan_kernel_key
+.grok_demo_key
 venv/
 .venv/
 .env
