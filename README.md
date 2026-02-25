@@ -94,6 +94,31 @@ curl -H "X-WS-API-Key: your-key" http://localhost:8000/v1/invariants
 curl -H "X-WS-API-Key: your-key" http://localhost:8000/v1/cef/export
 ```
 
+### Decision Ledger (Cryptographic Audit Trail)
+
+The decision ledger provides forensic-grade proof for high-risk AI decisions: Ed25519 signatures, SHA-256 hash chaining, and exportable evidence packets.
+
+```bash
+# Run the ledger demo — generates evidence_packet.json + full_ledger_export.json
+python whiteswan/decision_ledger.py
+
+# Third-party verification (single record)
+python whiteswan/verify_evidence.py evidence_packet.json
+
+# Third-party verification (full chain, end-to-end)
+python whiteswan/verify_evidence.py --chain full_ledger_export.json
+```
+
+**What a third party can independently verify:**
+
+| Check | Single record | Full chain (`--chain`) |
+|-------|:---:|:---:|
+| record_hash recomputation (tamper detection) | Yes | Yes |
+| Ed25519 signature over record_hash | Yes | Yes |
+| prev_hash linkage (chain integrity) | -- | Yes |
+
+The verifier requires only `PyNaCl` and the JSON export files — no database access, no private keys.
+
 ### Try the Grok Governance Demo
 
 ```bash
@@ -116,9 +141,11 @@ curl -X POST http://localhost:8000/chat \
 ├── whiteswan_api_v35.py                  # FastAPI HTTP layer — 70+ endpoints
 ├── app_v35.py                            # Application entry point
 │
-├── whiteswan/                            # Installable package entrypoint
+├── whiteswan/                            # Installable package
 │   ├── __init__.py
-│   └── api.py
+│   ├── api.py                            # Package API entrypoint
+│   ├── decision_ledger.py                # Ed25519-signed hash-chained decision ledger
+│   └── verify_evidence.py               # Standalone third-party verifier (no DB needed)
 │
 ├── integration_test_v35.py               # 73 integration tests covering all subsystems
 ├── tests/
@@ -201,9 +228,10 @@ The governance kernel doesn't care what model you use. It cares whether the oper
 
 ## Documentation
 
-- [Architecture & Specification](docs/) — System specification and safety proofs
 - [API Reference](whiteswan_api_v35.py) — All 70+ endpoints with Pydantic schemas
 - [Integration Tests](integration_test_v35.py) — 73 executable examples
+- [Decision Ledger](whiteswan/decision_ledger.py) — Ed25519-signed hash-chained audit trail
+- [Evidence Verifier](whiteswan/verify_evidence.py) — Standalone third-party verification
 - [Grok Demo](examples/grok-governance-wrapper/) — Working governance wrapper
 
 ## Contributing
