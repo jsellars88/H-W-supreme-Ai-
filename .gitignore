@@ -18,3 +18,5 @@ build/
 .ruff_cache/
 htmlcov/
 .coverage
+evidence_packet.json
+test_ledger.db
