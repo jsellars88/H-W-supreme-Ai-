@@ -387,6 +387,43 @@ class DecisionLedger:
             )
         }
 
+    def export_full_ledger(self) -> Dict[str, Any]:
+        """
+        Export the entire ledger for third-party chain verification.
+        Contains all records in sequence order + public key.
+        No private key material is included.
+        """
+        rows = self.db.execute("""
+            SELECT * FROM decisions ORDER BY seq ASC
+        """).fetchall()
+
+        records = []
+        for row in rows:
+            records.append({
+                "decision_id": row[1],
+                "input_hash": row[2],
+                "model_version": row[3],
+                "model_fingerprint": row[4],
+                "policy_version": row[5],
+                "operator_id": row[6],
+                "risk_tier": row[7],
+                "timestamp": row[8],
+                "nonce": row[9],
+                "nonce_scope": row[10],
+                "prev_hash": row[11],
+                "record_hash": row[12],
+                "signature": row[13],
+                "schema_version": row[14],
+            })
+
+        return {
+            "ledger_pubkey": self.pubkey_hex,
+            "pubkey_anchor": self.pubkey_anchor,
+            "record_count": len(records),
+            "records": records,
+            "exported_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
+
     def close(self):
         """Clean up database connection."""
         if self.db:
@@ -466,11 +503,23 @@ if __name__ == "__main__":
             print(f"   Records: {chain['record_count']}")
             print(f"   Head: {chain['chain_head'][:16]}...")
 
+        # Export full ledger for third-party chain verification
+        full_export = ledger.export_full_ledger()
+        with open("full_ledger_export.json", "w") as f:
+            json.dump(full_export, f, indent=2)
+        print(f"\nFull ledger exported to full_ledger_export.json"
+              f" ({full_export['record_count']} records)")
+
     # Now outside the context manager, using captured values
     print("\n" + "=" * 60)
     print("\nEXTERNAL VERIFICATION INSTRUCTIONS:")
     print("   1. Publish this public key in advance:")
     print(f"      {pubkey_for_display}")
-    print("   2. Share evidence_packet.json with any third party")
-    print("   3. Verify: signature matches pubkey, chain hashes link")
+    print("   2. Hand a third party:")
+    print("      - evidence_packet.json      (single record proof)")
+    print("      - full_ledger_export.json   (full chain proof)")
+    print("      - verify_evidence.py        (verifier script)")
+    print("   3. They run:")
+    print("      python verify_evidence.py evidence_packet.json")
+    print("      python verify_evidence.py --chain full_ledger_export.json")
     print("=" * 60)

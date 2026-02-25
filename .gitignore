@@ -19,4 +19,5 @@ build/
 htmlcov/
 .coverage
 evidence_packet.json
+full_ledger_export.json
 test_ledger.db
