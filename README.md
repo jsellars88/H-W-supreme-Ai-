@@ -119,6 +119,38 @@ python whiteswan/verify_evidence.py --chain full_ledger_export.json
 
 The verifier requires only `PyNaCl` and the JSON export files — no database access, no private keys.
 
+### Rekor Transparency Log (Public Anchor)
+
+Governance decisions can be anchored in the [Sigstore Rekor](https://rekor.sigstore.dev) public transparency log — giving regulators, auditors, and insurers a third-party proof point that doesn't depend on your infrastructure.
+
+```bash
+# Smoke test (offline mode — no network)
+python whiteswan/rekor_anchor.py
+
+# Live test (submits to real Rekor)
+REKOR_LIVE=1 python whiteswan/rekor_anchor.py
+```
+
+**Integration with the decision ledger:**
+
+```python
+from whiteswan.rekor_anchor import RekorAnchor, ed25519_verify_key_to_pem
+
+pem = ed25519_verify_key_to_pem(ledger.pubkey_hex)
+anchor = RekorAnchor(verify_key_pem=pem)
+receipt = anchor.anchor(record.record_hash, record.signature)
+# receipt.to_dict() → embed in evidence_packet.json
+```
+
+**What Rekor adds to the verification stack:**
+
+| Layer | What it proves | Who can verify |
+|-------|---------------|----------------|
+| Decision Ledger | Record integrity + signatures | You (local DB) |
+| Evidence Packet | Record + signature (no DB) | Any third party |
+| Full Chain Export | End-to-end chain integrity | Any third party |
+| **Rekor Anchor** | **Decision existed at time T in a public log** | **Anyone on the internet** |
+
 ### Try the Grok Governance Demo
 
 ```bash
@@ -145,7 +177,8 @@ curl -X POST http://localhost:8000/chat \
 │   ├── __init__.py
 │   ├── api.py                            # Package API entrypoint
 │   ├── decision_ledger.py                # Ed25519-signed hash-chained decision ledger
-│   └── verify_evidence.py               # Standalone third-party verifier (no DB needed)
+│   ├── verify_evidence.py               # Standalone third-party verifier (no DB needed)
+│   └── rekor_anchor.py                  # Sigstore Rekor transparency log anchor
 │
 ├── integration_test_v35.py               # 73 integration tests covering all subsystems
 ├── tests/
@@ -199,6 +232,7 @@ Operator ──► Register (Ed25519 key + role)
          ──► Issue Handshake (signed GOVERNANCE_ENVELOPE)
          ──► Authorize Action (signature chain + drift + geofence + tier validation)
          ──► Evidence Captured (Guardian Vault X + Merkle proof)
+         ──► Rekor Anchored (public transparency log — optional)
          ──► Compliance Exported (CEF → regulator-ready docs)
 ```
 
@@ -232,6 +266,7 @@ The governance kernel doesn't care what model you use. It cares whether the oper
 - [Integration Tests](integration_test_v35.py) — 73 executable examples
 - [Decision Ledger](whiteswan/decision_ledger.py) — Ed25519-signed hash-chained audit trail
 - [Evidence Verifier](whiteswan/verify_evidence.py) — Standalone third-party verification
+- [Rekor Anchor](whiteswan/rekor_anchor.py) — Sigstore Rekor transparency log integration
 - [Grok Demo](examples/grok-governance-wrapper/) — Working governance wrapper
 
 ## Contributing
