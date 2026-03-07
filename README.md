@@ -80,31 +80,34 @@ curl -H "X-Api-Key: your-key" http://localhost:8000/invariants
 ## Project Structure
 
 ```text
-whiteswan/                     # Governance engine (the product)
-├── kernel_v34.py              # Base governance kernel (Governor, MGI, Vault, Telemetry)
-├── kernel_v35.py              # v3.5 subsystems (TPI, MKC, CRP, CLG, GIF, CEL, CSM, GFE, CEF)
-├── api.py                     # FastAPI HTTP layer — 52 endpoints
-└── __init__.py
+# Canonical governance modules (stable top-level imports)
+whiteswan_governance_kernel_v3_4.py
+kernel_v34.py
+kernel_v35.py
+whiteswan_api_v35.py
+decision_ledger.py
+ledger_writer.py
+verify_evidence.py
+integration_test_v35.py
+
+# Package namespace for modern imports
+whiteswan/
+├── __init__.py
+├── api.py                     # wraps whiteswan_api_v35
+├── kernel_v34.py              # wraps kernel_v34
+├── kernel_v35.py              # wraps kernel_v35
+├── whiteswan_governance_kernel_v3_4.py
+├── decision_ledger.py
+├── ledger_writer.py
+└── verify_evidence.py
 
 tests/
-├── integration_test_v35.py    # 70 integration tests covering all subsystems
-└── conftest.py
+├── test_whiteswan_governance_kernel.py
+├── test_rekor_anchor.py
+└── integration_test_v35.py    # shim to top-level integration suite
 
-docs/                          # Specifications and compliance
-├── WhiteSwan_OS_v3_5_Specification.docx
-├── GSN_Assurance_Case.docx    # Formal safety proof (57 evidence items)
-└── ARCHITECTURE.md
-
-site/                          # Marketing site (Flask content cards)
-├── app/
-│   ├── main.py
-│   └── templates/
-└── data/posts.json
-
-pyproject.toml                 # Python package configuration
-requirements.txt
-LICENSE
-README.md
+app/                           # Flask content-card site (supporting interface)
+data/posts.json                # Sample content source
 ```
 
 ## Verification Status

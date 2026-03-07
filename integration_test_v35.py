@@ -9,7 +9,6 @@ Uses FastAPI TestClient — no separate server process.
 
 import json
 import os
-import sys
 
 # Configure env BEFORE importing app
 os.environ["WS_API_KEYS"] = "test-key-alpha,test-key-bravo"
@@ -17,8 +16,6 @@ os.environ["WS_REQUIRE_AUTH_READONLY"] = "1"
 os.environ["WS_DB_FILE"] = ":memory:"
 os.environ["WS_SEAL_INTERVAL"] = "50"
 os.environ["WS_DEV_EXPOSE_KEYS"] = "1"
-
-sys.path.insert(0, os.path.dirname(__file__))
 
 from contextlib import contextmanager
 from fastapi.testclient import TestClient
