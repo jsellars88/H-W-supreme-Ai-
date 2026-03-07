@@ -18,7 +18,7 @@ os.environ["WS_DB_FILE"] = ":memory:"
 os.environ["WS_SEAL_INTERVAL"] = "50"
 os.environ["WS_DEV_EXPOSE_KEYS"] = "1"
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from contextlib import contextmanager
 from fastapi.testclient import TestClient
