@@ -9,6 +9,7 @@ Uses FastAPI TestClient — no separate server process.
 
 import json
 import os
+import sys
 
 # Configure env BEFORE importing app
 os.environ["WS_API_KEYS"] = "test-key-alpha,test-key-bravo"
