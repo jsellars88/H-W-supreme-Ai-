@@ -151,6 +151,33 @@ receipt = anchor.anchor(record.record_hash, record.signature)
 | Full Chain Export | End-to-end chain integrity | Any third party |
 | **Rekor Anchor** | **Decision existed at time T in a public log** | **Anyone on the internet** |
 
+### Research Harvester (Guardian Vault X Ingestor)
+
+Curated public research harvester that collects, classifies, and indexes evidence from academic and regulatory sources into Guardian Vault X evidence capsules.
+
+```bash
+# Harvest a specific topic (from seed URLs + arXiv search)
+python whiteswan/hws_research_harvester_pro.py --topic governance_standards --limit 5
+
+# Harvest all 6 topics
+python whiteswan/hws_research_harvester_pro.py --all --limit 3
+
+# Harvest a specific URL
+python whiteswan/hws_research_harvester_pro.py --url https://arxiv.org/abs/2309.00986
+
+# Search arXiv and harvest results
+python whiteswan/hws_research_harvester_pro.py --search "agentic ai safety"
+
+# Vault report / search / Markdown index
+python whiteswan/hws_research_harvester_pro.py --report
+python whiteswan/hws_research_harvester_pro.py --find "prompt injection"
+python whiteswan/hws_research_harvester_pro.py --index
+```
+
+**Topics covered:** Agentic AI, Robot Safety, Isaac Sim, Aero Policy, BioMedical, Governance Standards
+
+**Built-in safeguards:** robots.txt enforcement, domain allowlist (`.edu`, `.gov`, curated list), per-domain rate limiting, URL + content-hash deduplication, canonical URL normalization.
+
 ### Try the Grok Governance Demo
 
 ```bash
@@ -178,7 +205,8 @@ curl -X POST http://localhost:8000/chat \
 │   ├── api.py                            # Package API entrypoint
 │   ├── decision_ledger.py                # Ed25519-signed hash-chained decision ledger
 │   ├── verify_evidence.py               # Standalone third-party verifier (no DB needed)
-│   └── rekor_anchor.py                  # Sigstore Rekor transparency log anchor
+│   ├── rekor_anchor.py                  # Sigstore Rekor transparency log anchor
+│   └── hws_research_harvester_pro.py    # Curated public research harvester (Guardian Vault X)
 │
 ├── integration_test_v35.py               # 73 integration tests covering all subsystems
 ├── tests/
@@ -267,6 +295,7 @@ The governance kernel doesn't care what model you use. It cares whether the oper
 - [Decision Ledger](whiteswan/decision_ledger.py) — Ed25519-signed hash-chained audit trail
 - [Evidence Verifier](whiteswan/verify_evidence.py) — Standalone third-party verification
 - [Rekor Anchor](whiteswan/rekor_anchor.py) — Sigstore Rekor transparency log integration
+- [Research Harvester](whiteswan/hws_research_harvester_pro.py) — Curated public research harvester
 - [Grok Demo](examples/grok-governance-wrapper/) — Working governance wrapper
 
 ## Contributing

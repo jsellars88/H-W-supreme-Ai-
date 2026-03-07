@@ -21,3 +21,6 @@ htmlcov/
 evidence_packet.json
 full_ledger_export.json
 test_ledger.db
+guardian_vault_x/
+guardian_vault_x.sqlite
+guardian_vault_index.md
