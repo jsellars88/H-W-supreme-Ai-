@@ -6,8 +6,8 @@
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kernel](https://img.shields.io/badge/kernel-v3.5-brightgreen)](whiteswan_governance_kernel_v3_4.py)
-[![Tests](https://img.shields.io/badge/tests-122%20passing-brightgreen)](tests/)
+[![Kernel](https://img.shields.io/badge/kernel-v3.5-brightgreen)](kernel_v35.py)
+[![Tests](https://img.shields.io/badge/tests-integration%20%2B%20unit-brightgreen)](tests/)
 
 -----
 
@@ -97,16 +97,16 @@ These boundaries are architectural features, not omissions:
 ## Repository Structure
 
 ```
-whiteswan_governance_kernel_v3_4.py   # Core governance kernel — 23 invariants, runtime enforcement
-whiteswan_api_v35.py                  # REST API wrapper — exposes kernel over HTTP
-kernel_v35.py                         # Kernel v3.5 with hardened invariant set
-integration_test_v35.py               # Full integration test suite (122 tests passing)
+whiteswan_governance_kernel_v3_4.py   # Core governance kernel baseline
+kernel_v35.py                         # Kernel v3.5 hardened invariant implementation
+whiteswan_api_v35.py                  # API wrapper exposing governance endpoints
+integration_test_v35.py               # End-to-end API integration checks
 
 app/
   main.py                             # Flask dashboard — governance status cards
   templates/                          # Jinja2 templates
 
-tests/                                # Unit and integration test suites
+tests/                                # Unit tests for kernel + Rekor anchoring paths
 
 data/
   posts.json                          # Dashboard content data
