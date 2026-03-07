@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import whiteswan_governance_kernel_v3_4 as ws
+from whiteswan import whiteswan_governance_kernel_v3_4 as ws
 
 
 class WhiteSwanKernelTests(unittest.TestCase):

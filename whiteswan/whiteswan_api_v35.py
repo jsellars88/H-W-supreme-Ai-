@@ -31,7 +31,7 @@ from pydantic import BaseModel
 # ── Import v3.5 kernel (which includes v3.4) ─────────────────────────
 # These imports must exist in your project.
 import kernel_v34 as k34
-import kernel_v35 as k35
+from whiteswan import kernel_v35 as k35
 
 # ── Configuration ────────────────────────────────────────────────────
 
