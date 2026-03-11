@@ -32,7 +32,7 @@ import time
 import urllib.robotparser
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from urllib.parse import parse_qsl, quote_plus, urlencode, urlparse, urlunparse
 
 import requests
@@ -51,11 +51,10 @@ except ImportError:
 
 EXTRACTOR_VERSION = "3.1"
 USER_AGENT = (
-    "HWS-ResearchBot/3.1 "
-    "(public academic/regulatory research indexing; respects robots.txt)"
+    "HWS-ResearchBot/3.1 (public academic/regulatory research indexing; respects robots.txt)"
 )
 
-TOPICS: Dict[str, List[str]] = {
+TOPICS: dict[str, list[str]] = {
     "omnineuro_agentic_ai": [
         "agentic ai",
         "llm agents",
@@ -139,7 +138,7 @@ TOPICS: Dict[str, List[str]] = {
     ],
 }
 
-SUBTOPICS: Dict[str, List[str]] = {
+SUBTOPICS: dict[str, list[str]] = {
     "prompt_injection": ["prompt injection", "jailbreak", "indirect prompt injection"],
     "red_teaming": ["red teaming", "adversarial testing", "safety eval", "eval agent"],
     "robot_safety_case": ["ul 4600", "safety case", "functional safety", "hazard analysis"],
@@ -150,7 +149,7 @@ SUBTOPICS: Dict[str, List[str]] = {
     "compliance": ["eu ai act", "iso 42001", "nist ai rmf", "algorithmic accountability"],
 }
 
-VAULT_PATHS: Dict[str, str] = {
+VAULT_PATHS: dict[str, str] = {
     "omnineuro_agentic_ai": "Guardian Vault X / OmniNeuro / Agentic-AI",
     "omnibots_safety": "Guardian Vault X / OmniBots / Safety-Standards",
     "omnisim_isaac": "Guardian Vault X / OmniSim-Isaac",
@@ -200,7 +199,7 @@ ALLOWED_DOMAINS = {
 }
 ALLOWED_SUFFIXES = (".edu", ".gov")
 
-RATE_LIMITS: Dict[str, float] = {
+RATE_LIMITS: dict[str, float] = {
     "arxiv.org": 3.0,
     "export.arxiv.org": 3.0,
     "pubmed.ncbi.nlm.nih.gov": 2.0,
@@ -210,7 +209,7 @@ RATE_LIMITS: Dict[str, float] = {
     "default": 3.0,
 }
 
-SEED_URLS: Dict[str, List[str]] = {
+SEED_URLS: dict[str, list[str]] = {
     "omnineuro_agentic_ai": [
         "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
         "https://nvlpubs.nist.gov/nistpubs/ai/nist.ai.100-1.pdf",
@@ -253,6 +252,7 @@ MAX_PDF_PAGES = 12
 # DATA MODELS
 # =============================================================================
 
+
 @dataclass
 class EvidenceCapsule:
     capsule_id: str
@@ -260,7 +260,7 @@ class EvidenceCapsule:
     original_url: str
     final_url: str
     topic: str
-    subtopics: List[str]
+    subtopics: list[str]
     vault_path: str
     title: str
     domain: str
@@ -271,8 +271,8 @@ class EvidenceCapsule:
     http_status: int
     summary: str
     raw_text: str
-    keywords: List[str]
-    topic_scores: Dict[str, int]
+    keywords: list[str]
+    topic_scores: dict[str, int]
     sha256: str
     source_query: str = ""
     topic_hint: str = ""
@@ -281,7 +281,7 @@ class EvidenceCapsule:
     arxiv_id: str = ""
     doi: str = ""
     bibtex: str = ""
-    headers_subset: Dict[str, str] = field(default_factory=dict)
+    headers_subset: dict[str, str] = field(default_factory=dict)
     error_msg: str = ""
     status: str = "ok"
 
@@ -289,6 +289,7 @@ class EvidenceCapsule:
 # =============================================================================
 # HELPERS
 # =============================================================================
+
 
 def utc_now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -314,7 +315,7 @@ def summarize_text(text: str, max_sentences: int = 5) -> str:
     if len(sentences) <= max_sentences:
         return " ".join(sentences)[:1200]
 
-    scored: List[Tuple[int, str]] = []
+    scored: list[tuple[int, str]] = []
     for sent in sentences[:40]:
         score = len(sent.split())
         lower = sent.lower()
@@ -331,7 +332,7 @@ def summarize_text(text: str, max_sentences: int = 5) -> str:
     return (summary or clean[:1200])[:1200]
 
 
-def generate_subtopics(text: str) -> List[str]:
+def generate_subtopics(text: str) -> list[str]:
     lower = text.lower()
     return [name for name, kws in SUBTOPICS.items() if any(kw in lower for kw in kws)][:8]
 
@@ -423,9 +424,10 @@ def generate_bibtex(capsule: EvidenceCapsule) -> str:
 # ROBOTS + RATE LIMIT
 # =============================================================================
 
+
 class RobotsCache:
     def __init__(self) -> None:
-        self._cache: Dict[str, Optional[urllib.robotparser.RobotFileParser]] = {}
+        self._cache: dict[str, urllib.robotparser.RobotFileParser | None] = {}
 
     def allowed(self, url: str, user_agent: str = USER_AGENT) -> bool:
         parsed = urlparse(url)
@@ -448,7 +450,7 @@ class RobotsCache:
 
 class RateLimiter:
     def __init__(self) -> None:
-        self._last: Dict[str, float] = {}
+        self._last: dict[str, float] = {}
 
     def wait(self, url: str) -> None:
         domain = urlparse(url).netloc.lower()
@@ -468,6 +470,7 @@ class RateLimiter:
 # =============================================================================
 # SQLITE INDEX
 # =============================================================================
+
 
 class VaultIndex:
     def __init__(self, db_path: str) -> None:
@@ -499,14 +502,14 @@ class VaultIndex:
         )
         self.db.commit()
 
-    def seen_url(self, canonical: str) -> Optional[str]:
+    def seen_url(self, canonical: str) -> str | None:
         row = self.db.execute(
             "SELECT capsule_id FROM capsules WHERE canonical_url = ?",
             (canonical,),
         ).fetchone()
         return row[0] if row else None
 
-    def seen_hash(self, sha256: str) -> Optional[str]:
+    def seen_hash(self, sha256: str) -> str | None:
         row = self.db.execute(
             "SELECT capsule_id FROM capsules WHERE sha256 = ?",
             (sha256,),
@@ -579,6 +582,7 @@ class VaultIndex:
 # COLLECTOR
 # =============================================================================
 
+
 class Collector:
     HEADERS = {
         "User-Agent": USER_AGENT,
@@ -594,7 +598,7 @@ class Collector:
         self._session = requests.Session()
         self._session.headers.update(self.HEADERS)
 
-    def fetch(self, url: str) -> Tuple[Optional[requests.Response], str]:
+    def fetch(self, url: str) -> tuple[requests.Response | None, str]:
         if not is_allowed_url(url):
             return None, f"domain not in allowlist: {urlparse(url).netloc}"
 
@@ -615,14 +619,14 @@ class Collector:
         except Exception as exc:
             return None, str(exc)
 
-    def extract(self, resp: requests.Response) -> Tuple[str, str, bool]:
+    def extract(self, resp: requests.Response) -> tuple[str, str, bool]:
         content_type = resp.headers.get("Content-Type", "").lower()
         is_pdf = "pdf" in content_type or resp.url.lower().endswith(".pdf")
         if is_pdf and PDF_SUPPORT:
             return self._extract_pdf(resp)
         return self._extract_html(resp)
 
-    def _extract_html(self, resp: requests.Response) -> Tuple[str, str, bool]:
+    def _extract_html(self, resp: requests.Response) -> tuple[str, str, bool]:
         try:
             soup = BeautifulSoup(resp.content, "html.parser")
             for tag in soup(["script", "style", "noscript", "nav", "footer", "header", "aside"]):
@@ -642,14 +646,14 @@ class Collector:
         except Exception as exc:
             return resp.url, f"[html extraction error: {exc}]", False
 
-    def _extract_pdf(self, resp: requests.Response) -> Tuple[str, str, bool]:
+    def _extract_pdf(self, resp: requests.Response) -> tuple[str, str, bool]:
         try:
             reader = PyPDF2.PdfReader(io.BytesIO(resp.content))
             title = resp.url
             if reader.metadata and reader.metadata.get("/Title"):
                 title = str(reader.metadata.get("/Title")).strip()
 
-            pages: List[str] = []
+            pages: list[str] = []
             for page in reader.pages[:MAX_PDF_PAGES]:
                 pages.append(page.extract_text() or "")
             text = sanitize_text("\n".join(pages))
@@ -662,15 +666,13 @@ class Collector:
 # CLASSIFIER
 # =============================================================================
 
-class Classifier:
-    def score(self, text: str) -> Dict[str, int]:
-        lower = text.lower()
-        return {
-            topic: sum(1 for kw in kws if kw.lower() in lower)
-            for topic, kws in TOPICS.items()
-        }
 
-    def classify(self, text: str) -> Tuple[Optional[str], List[str], Dict[str, int]]:
+class Classifier:
+    def score(self, text: str) -> dict[str, int]:
+        lower = text.lower()
+        return {topic: sum(1 for kw in kws if kw.lower() in lower) for topic, kws in TOPICS.items()}
+
+    def classify(self, text: str) -> tuple[str | None, list[str], dict[str, int]]:
         scores = self.score(text)
         best_topic = max(scores, key=lambda k: scores[k])
         best_score = scores[best_topic]
@@ -687,7 +689,8 @@ class Classifier:
 # SEARCH ADAPTERS
 # =============================================================================
 
-def search_arxiv(query: str, n: int = 5) -> List[str]:
+
+def search_arxiv(query: str, n: int = 5) -> list[str]:
     try:
         url = (
             "https://export.arxiv.org/search/?searchtype=all"
@@ -698,7 +701,7 @@ def search_arxiv(query: str, n: int = 5) -> List[str]:
         if resp.status_code != 200:
             return []
         soup = BeautifulSoup(resp.text, "html.parser")
-        urls: List[str] = []
+        urls: list[str] = []
         for node in soup.find_all("p", class_="list-title"):
             anchor = node.find("a")
             if anchor and anchor.get("href") and "arxiv.org" in anchor["href"]:
@@ -708,7 +711,7 @@ def search_arxiv(query: str, n: int = 5) -> List[str]:
         return []
 
 
-def search_pubmed(query: str, n: int = 5) -> List[str]:
+def search_pubmed(query: str, n: int = 5) -> list[str]:
     try:
         url = f"https://pubmed.ncbi.nlm.nih.gov/?term={quote_plus(query)}"
         time.sleep(2)
@@ -716,7 +719,7 @@ def search_pubmed(query: str, n: int = 5) -> List[str]:
         if resp.status_code != 200:
             return []
         soup = BeautifulSoup(resp.text, "html.parser")
-        urls: List[str] = []
+        urls: list[str] = []
         for anchor in soup.find_all("a", href=True):
             href = anchor["href"]
             if re.match(r"^/\d+/?$", href):
@@ -731,13 +734,16 @@ def search_pubmed(query: str, n: int = 5) -> List[str]:
 # VAULT
 # =============================================================================
 
+
 class EvidenceVault:
-    def __init__(self, vault_dir: str = "guardian_vault_x", db_path: str = "guardian_vault_x.sqlite") -> None:
+    def __init__(
+        self, vault_dir: str = "guardian_vault_x", db_path: str = "guardian_vault_x.sqlite"
+    ) -> None:
         self._dir = Path(vault_dir)
         self._dir.mkdir(parents=True, exist_ok=True)
         self._index = VaultIndex(db_path)
 
-    def store(self, capsule: EvidenceCapsule) -> Tuple[bool, str]:
+    def store(self, capsule: EvidenceCapsule) -> tuple[bool, str]:
         existing_url = self._index.seen_url(capsule.canonical_url)
         if existing_url:
             return False, existing_url
@@ -768,9 +774,9 @@ class EvidenceVault:
     def rebuild_index(self) -> int:
         return self._index.rebuild_from_vault(str(self._dir))
 
-    def search(self, query: str, topic: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search(self, query: str, topic: str | None = None) -> list[dict[str, Any]]:
         q = query.lower()
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for file in self._dir.rglob("*.json"):
             try:
                 data = json.loads(file.read_text(encoding="utf-8"))
@@ -804,8 +810,8 @@ class EvidenceVault:
                 continue
         return results
 
-    def stats(self) -> Dict[str, Any]:
-        counts: Dict[str, int] = {}
+    def stats(self) -> dict[str, Any]:
+        counts: dict[str, int] = {}
         total = 0
         for file in self._dir.rglob("*.json"):
             try:
@@ -827,12 +833,13 @@ class EvidenceVault:
 # VAULT INDEXER
 # =============================================================================
 
+
 class VaultIndexer:
     def __init__(self, vault_dir: str = "guardian_vault_x") -> None:
         self._dir = Path(vault_dir)
 
-    def generate(self, output_path: Optional[str] = None) -> str:
-        sections: Dict[str, List[Dict[str, Any]]] = {}
+    def generate(self, output_path: str | None = None) -> str:
+        sections: dict[str, list[dict[str, Any]]] = {}
 
         for file in sorted(self._dir.rglob("*.json")):
             try:
@@ -844,7 +851,7 @@ class VaultIndexer:
             except Exception:
                 continue
 
-        lines: List[str] = [
+        lines: list[str] = [
             "# Guardian Vault X - Evidence Index",
             "",
             f"*Generated: {utc_now()}*",
@@ -898,6 +905,7 @@ class VaultIndexer:
 # HARVESTER
 # =============================================================================
 
+
 class Harvester:
     def __init__(
         self,
@@ -920,7 +928,7 @@ class Harvester:
         return self._vault
 
     @property
-    def stats(self) -> Dict[str, int]:
+    def stats(self) -> dict[str, int]:
         return dict(self._stats)
 
     def _make_capsule(
@@ -930,8 +938,8 @@ class Harvester:
         title: str,
         text: str,
         topic: str,
-        keywords: List[str],
-        scores: Dict[str, int],
+        keywords: list[str],
+        scores: dict[str, int],
         is_pdf: bool,
         topic_hint: str = "",
         source_query: str = "",
@@ -983,10 +991,10 @@ class Harvester:
     def harvest_url(
         self,
         url: str,
-        topic: Optional[str] = None,
+        topic: str | None = None,
         force_topic: bool = False,
         source_query: str = "",
-    ) -> Optional[EvidenceCapsule]:
+    ) -> EvidenceCapsule | None:
         self._log(f"  → {url}")
         original_url = url
 
@@ -1054,13 +1062,13 @@ class Harvester:
 
         return capsule if stored else None
 
-    def harvest_topic(self, topic: str, limit: int = 5) -> List[EvidenceCapsule]:
+    def harvest_topic(self, topic: str, limit: int = 5) -> list[EvidenceCapsule]:
         self._log(f"\n{'=' * 70}")
         self._log(f"  TOPIC: {topic}")
         self._log(f"  VAULT: {VAULT_PATHS[topic]}")
         self._log(f"{'=' * 70}")
 
-        results: List[EvidenceCapsule] = []
+        results: list[EvidenceCapsule] = []
 
         seeds = SEED_URLS.get(topic, [])[:limit]
         self._log(f"\n  [Seeds: {len(seeds)}]")
@@ -1091,15 +1099,15 @@ class Harvester:
 
         return results
 
-    def harvest_all(self, limit_per_topic: int = 3) -> List[EvidenceCapsule]:
-        out: List[EvidenceCapsule] = []
+    def harvest_all(self, limit_per_topic: int = 3) -> list[EvidenceCapsule]:
+        out: list[EvidenceCapsule] = []
         for topic in TOPICS:
             out.extend(self.harvest_topic(topic, limit=limit_per_topic))
         return out
 
-    def harvest_search(self, query: str, topic: Optional[str] = None) -> List[EvidenceCapsule]:
+    def harvest_search(self, query: str, topic: str | None = None) -> list[EvidenceCapsule]:
         self._log(f"\n  [arXiv search: '{query}']")
-        out: List[EvidenceCapsule] = []
+        out: list[EvidenceCapsule] = []
         for url in search_arxiv(query, n=5):
             cap = self.harvest_url(url, topic=topic, source_query=query)
             if cap:
@@ -1113,6 +1121,7 @@ class Harvester:
 # =============================================================================
 # REPORTS
 # =============================================================================
+
 
 def print_report(vault: EvidenceVault) -> None:
     stats = vault.stats()
@@ -1131,6 +1140,7 @@ def print_report(vault: EvidenceVault) -> None:
 # CLI
 # =============================================================================
 
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="HWS Research Harvester Pro v3.1 - Guardian Vault X ingestor"
@@ -1142,7 +1152,9 @@ def main() -> None:
     parser.add_argument("--report", action="store_true", help="Print vault report")
     parser.add_argument("--find", type=str, help="Search vault for a term")
     parser.add_argument("--index", action="store_true", help="Generate Markdown TOC")
-    parser.add_argument("--reindex", action="store_true", help="Rebuild SQLite index from vault JSON")
+    parser.add_argument(
+        "--reindex", action="store_true", help="Rebuild SQLite index from vault JSON"
+    )
     parser.add_argument("--limit", type=int, default=5, help="Max items per topic")
     parser.add_argument("--vault", type=str, default="guardian_vault_x", help="Vault directory")
     parser.add_argument("--db", type=str, default="guardian_vault_x.sqlite", help="SQLite index")

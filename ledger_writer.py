@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import queue
 import threading
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from decision_ledger import DecisionLedger, DecisionRecord
 
@@ -45,7 +45,7 @@ class RekorReceipt:
         self.entry_uuid = entry_uuid
         self.proof_url = proof_url
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "decision_id": self.decision_id,
             "record_hash": self.record_hash,
@@ -67,20 +67,18 @@ class LedgerWriter:
     def __init__(
         self,
         db_path: str = "decisions.db",
-        key_path: Optional[str] = None,
+        key_path: str | None = None,
         max_queue: int = 10_000,
         enable_rekor: bool = False,
         rekor_server: str = "https://rekor.sigstore.dev",
         rekor_offline: bool = False,
     ):
-        self._q: "queue.Queue[Tuple[Dict[str, Any], queue.Queue]]" = queue.Queue(
-            maxsize=max_queue
-        )
+        self._q: queue.Queue[tuple[dict[str, Any], queue.Queue]] = queue.Queue(maxsize=max_queue)
         self._stop = threading.Event()
         self._ready = threading.Event()
         self._pubkey_hex = None
         self._key_id = None
-        self._rekor_receipts: List[RekorReceipt] = []
+        self._rekor_receipts: list[RekorReceipt] = []
         self._receipts_lock = threading.Lock()
 
         self.enable_rekor = enable_rekor and (_REKOR_AVAILABLE or rekor_offline)
@@ -100,38 +98,38 @@ class LedgerWriter:
             raise RuntimeError("LedgerWriter: writer thread failed to start in 10s")
 
     @property
-    def pubkey_hex(self) -> Optional[str]:
+    def pubkey_hex(self) -> str | None:
         return self._pubkey_hex
 
     @property
-    def key_id(self) -> Optional[str]:
+    def key_id(self) -> str | None:
         return self._key_id
 
     def submit(self, **kwargs) -> DecisionRecord:
-        rq: "queue.Queue[Any]" = queue.Queue(maxsize=1)
+        rq: queue.Queue[Any] = queue.Queue(maxsize=1)
         self._q.put((kwargs, rq))
         result = rq.get()
         if isinstance(result, Exception):
             raise result
         return result
 
-    def verify_chain(self) -> Dict[str, Any]:
-        rq: "queue.Queue[Any]" = queue.Queue(maxsize=1)
+    def verify_chain(self) -> dict[str, Any]:
+        rq: queue.Queue[Any] = queue.Queue(maxsize=1)
         self._q.put(({"__verify__": True}, rq))
         result = rq.get()
         if isinstance(result, Exception):
             raise result
         return result
 
-    def export_proof(self, decision_id: str) -> Dict[str, Any]:
-        rq: "queue.Queue[Any]" = queue.Queue(maxsize=1)
+    def export_proof(self, decision_id: str) -> dict[str, Any]:
+        rq: queue.Queue[Any] = queue.Queue(maxsize=1)
         self._q.put(({"__export_proof__": decision_id}, rq))
         result = rq.get()
         if isinstance(result, Exception):
             raise result
         return result
 
-    def get_rekor_receipts(self, decision_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_rekor_receipts(self, decision_id: str | None = None) -> list[dict[str, Any]]:
         with self._receipts_lock:
             receipts = list(self._rekor_receipts)
         if decision_id:
@@ -149,7 +147,7 @@ class LedgerWriter:
     def _worker(
         self,
         db_path: str,
-        key_path: Optional[str],
+        key_path: str | None,
         rekor_server: str,
         rekor_offline: bool,
     ):
@@ -157,7 +155,7 @@ class LedgerWriter:
         self._pubkey_hex = ledger.pubkey_hex
         self._key_id = ledger.key_id
 
-        anchor: Optional[RekorAnchor] = None
+        anchor: RekorAnchor | None = None
         if self.enable_rekor:
             try:
                 if _REKOR_AVAILABLE:
@@ -201,7 +199,7 @@ class LedgerWriter:
         finally:
             ledger.close()
 
-    def _do_rekor_anchor(self, anchor: "RekorAnchor", rec: DecisionRecord):
+    def _do_rekor_anchor(self, anchor: RekorAnchor, rec: DecisionRecord):
         try:
             receipt = anchor.anchor(rec.record_hash, rec.signature)
             rr = RekorReceipt(

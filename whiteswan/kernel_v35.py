@@ -16,9 +16,9 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import kernel_v34 as k34
 
@@ -35,6 +35,7 @@ def now_z() -> str:
 # §3 — HSM KEY CUSTODY
 # ═════════════════════════════════════════════════════════════════════
 
+
 class HSMSlot(Enum):
     kernel_signing = "kernel_signing"
     audit_sealing = "audit_sealing"
@@ -48,7 +49,7 @@ class HSMKeyRecord:
     epoch: int
     pubkey_hex: str
     created_at: str
-    witnesses: List[str]
+    witnesses: list[str]
 
 
 class HSMKeyCustody:
@@ -59,8 +60,8 @@ class HSMKeyCustody:
 
     def __init__(self, vault: k34.GuardianVaultX):
         self._vault = vault
-        self._slots: Dict[str, HSMKeyRecord] = {}
-        self._rotations: List[Dict[str, Any]] = []
+        self._slots: dict[str, HSMKeyRecord] = {}
+        self._rotations: list[dict[str, Any]] = []
         # Bootstrap all four slots at epoch 1
         for slot in HSMSlot:
             self._slots[slot.value] = HSMKeyRecord(
@@ -72,13 +73,13 @@ class HSMKeyCustody:
             )
         self._vault.log("HSM", "INITIALIZED", slots=list(self._slots.keys()))
 
-    def export_manifest(self) -> Dict[str, Any]:
+    def export_manifest(self) -> dict[str, Any]:
         return {
             "slots": {s: asdict(r) for s, r in self._slots.items()},
             "slot_count": len(self._slots),
         }
 
-    def generate_key(self, slot: HSMSlot, witnesses: List[str]) -> HSMKeyRecord:
+    def generate_key(self, slot: HSMSlot, witnesses: list[str]) -> HSMKeyRecord:
         current = self._slots.get(slot.value)
         new_epoch = (current.epoch + 1) if current else 1
         rec = HSMKeyRecord(
@@ -89,17 +90,19 @@ class HSMKeyCustody:
             witnesses=witnesses,
         )
         self._slots[slot.value] = rec
-        self._rotations.append({
-            "slot": slot.value,
-            "old_epoch": new_epoch - 1,
-            "new_epoch": new_epoch,
-            "rotated_at": now_z(),
-            "witnesses": witnesses,
-        })
+        self._rotations.append(
+            {
+                "slot": slot.value,
+                "old_epoch": new_epoch - 1,
+                "new_epoch": new_epoch,
+                "rotated_at": now_z(),
+                "witnesses": witnesses,
+            }
+        )
         self._vault.log("HSM", "KEY_ROTATED", slot=slot.value, epoch=new_epoch)
         return rec
 
-    def rotation_history(self) -> List[Dict[str, Any]]:
+    def rotation_history(self) -> list[dict[str, Any]]:
         return list(self._rotations)
 
 
@@ -107,11 +110,12 @@ class HSMKeyCustody:
 # §4 — MEASURED BOOT & ATTESTATION
 # ═════════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class AttestationResult:
     ok: bool
     drift_from_baseline: float
-    measurements: Dict[str, str]
+    measurements: dict[str, str]
     attested_at: str
 
 
@@ -121,8 +125,8 @@ class MeasuredBootAttestation:
     def __init__(self, vault: k34.GuardianVaultX, gov: k34.Governor):
         self._vault = vault
         self._gov = gov
-        self._baseline: Dict[str, str] = {}
-        self._last_hash: Optional[str] = None
+        self._baseline: dict[str, str] = {}
+        self._last_hash: str | None = None
         self._attest_initial()
 
     def _attest_initial(self):
@@ -132,7 +136,7 @@ class MeasuredBootAttestation:
         self._last_hash = h
         self._vault.log("MBA", "BASELINE_SET", hash=h)
 
-    def _collect_measurements(self) -> Dict[str, str]:
+    def _collect_measurements(self) -> dict[str, str]:
         return {
             "schema_version": SCHEMA_VERSION,
             "kernel_key_id": self._gov.kernel_key_id,
@@ -141,7 +145,7 @@ class MeasuredBootAttestation:
             "vault_chain": str(self._gov.vault.verify_chain()),
         }
 
-    def export(self) -> Dict[str, Any]:
+    def export(self) -> dict[str, Any]:
         return {
             "baseline": self._baseline,
             "last_attestation_hash": self._last_hash,
@@ -150,9 +154,7 @@ class MeasuredBootAttestation:
 
     def attest(self) -> AttestationResult:
         current = self._collect_measurements()
-        drift = sum(
-            1 for k in self._baseline if current.get(k) != self._baseline.get(k)
-        )
+        drift = sum(1 for k in self._baseline if current.get(k) != self._baseline.get(k))
         drift_pct = drift / max(1, len(self._baseline))
         h = hashlib.sha256(k34._json_canon(current).encode()).hexdigest()
         self._last_hash = h
@@ -165,13 +167,14 @@ class MeasuredBootAttestation:
             attested_at=now_z(),
         )
 
-    def last_attestation_hash(self) -> Optional[str]:
+    def last_attestation_hash(self) -> str | None:
         return self._last_hash
 
 
 # ═════════════════════════════════════════════════════════════════════
 # UNIFIED KERNEL ORCHESTRATION
 # ═════════════════════════════════════════════════════════════════════
+
 
 class WhiteSwanKernel35:
     """Top-level kernel orchestrator.
@@ -214,7 +217,7 @@ class WhiteSwanKernel35:
 
     # ── Aggregate health ─────────────────────────────────────────────
 
-    def full_health(self) -> Dict[str, Any]:
+    def full_health(self) -> dict[str, Any]:
         health = self.gov.governance_health()
         health["schema"] = SCHEMA_VERSION
         health["hsm"] = self.hsm.export_manifest()
@@ -223,7 +226,7 @@ class WhiteSwanKernel35:
 
     # ── Constitutional invariant checks ──────────────────────────────
 
-    def check_invariants(self) -> Dict[str, Any]:
+    def check_invariants(self) -> dict[str, Any]:
         checks = {
             "db_integrity": self.gov.db.integrity_check(),
             "vault_chain": self.vault.verify_chain(),

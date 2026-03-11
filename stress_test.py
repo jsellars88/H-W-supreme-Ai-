@@ -10,7 +10,6 @@ import secrets
 import sys
 import threading
 import time
-from typing import List, Tuple
 
 from decision_ledger import DecisionLedger
 from ledger_writer import LedgerWriter
@@ -57,17 +56,17 @@ def demo_ownership_violation() -> bool:
 
 def run_concurrent(
     writer: LedgerWriter, n_threads: int, n_writes: int
-) -> Tuple[List[str], List[str], float]:
+) -> tuple[list[str], list[str], float]:
     writes_per_thread = n_writes // n_threads
-    all_ids: List[str] = []
-    all_errors: List[str] = []
+    all_ids: list[str] = []
+    all_errors: list[str] = []
     lock = threading.Lock()
     barrier = threading.Barrier(n_threads)
 
     def worker(tid: int):
         barrier.wait()
-        local_ids: List[str] = []
-        local_errors: List[str] = []
+        local_ids: list[str] = []
+        local_errors: list[str] = []
         for i in range(writes_per_thread):
             try:
                 rec = writer.submit(
@@ -79,9 +78,9 @@ def run_concurrent(
                         "nonce": secrets.token_hex(8),
                     },
                     model_version="credit-scoring-v2.1",
-                    model_fingerprint=hashlib.sha256(
-                        f"weights-t{tid}-i{i}".encode()
-                    ).hexdigest()[:64],
+                    model_fingerprint=hashlib.sha256(f"weights-t{tid}-i{i}".encode()).hexdigest()[
+                        :64
+                    ],
                     policy_version="lending-policy-2026-03",
                     operator_id=OPS[(tid * 7 + i) % len(OPS)],
                     risk_tier=TIERS[i % len(TIERS)],
@@ -112,7 +111,7 @@ def run_concurrent(
         t.join()
 
     elapsed = time.perf_counter() - start
-    print(f"\r  [{'█'*42}] {len(all_ids):>6}/{total}  ✓", flush=True)
+    print(f"\r  [{'█' * 42}] {len(all_ids):>6}/{total}  ✓", flush=True)
     return all_ids, all_errors, elapsed
 
 
@@ -122,10 +121,11 @@ def run_verify(writer: LedgerWriter, expected: int):
     return ok, chain
 
 
-def run_sample_verify(writer: LedgerWriter, all_ids: List[str], sample_n: int = 5) -> bool:
-    from verify_evidence import verify
+def run_sample_verify(writer: LedgerWriter, all_ids: list[str], sample_n: int = 5) -> bool:
     import os
     import tempfile
+
+    from verify_evidence import verify
 
     pubkey = writer.pubkey_hex
     if not pubkey:
@@ -200,16 +200,23 @@ def main() -> int:
     print("  RESULTS")
     print("═" * 66)
     print(f"  {'✓' if p0_ok else '✗'} Phase 0: ownership enforce   BLOCKED")
-    print(f"  {'✓' if ok_writes else '✗'} Writes completed             {len(all_ids):,} / {total:,}")
+    print(
+        f"  {'✓' if ok_writes else '✗'} Writes completed             {len(all_ids):,} / {total:,}"
+    )
     print(f"  ✓ Duration                     {elapsed:.3f}s")
     print(f"  ✓ Throughput                   {wps:,.0f} writes/sec")
     print(
         f"  {'✓' if p2_ok else '✗'} Chain integrity              "
         f"{'VERIFIED' if p2_ok else chain.get('message', 'FAILED')}"
     )
-    print(f"  {'✓' if p2_ok else '✗'} Chain length                 {chain.get('record_count', 0):,}")
+    print(
+        f"  {'✓' if p2_ok else '✗'} Chain length                 {chain.get('record_count', 0):,}"
+    )
     print(f"  {'✓' if ok_unique else '✗'} Unique decision_ids          {len(set(all_ids)):,}")
-    print(f"  {'✓' if ok_errors else '✗'} Write errors                 {len(all_errors) if all_errors else 'None'}")
+    print(
+        f"  {'✓' if ok_errors else '✗'} Write errors                 "
+        f"{len(all_errors) if all_errors else 'None'}"
+    )
     print(f"  {'✓' if p3_ok else '✗'} Evidence packet verify       SAMPLED 6 RECORDS")
 
     if args.output:
