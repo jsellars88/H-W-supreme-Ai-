@@ -6,7 +6,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Kernel](https://img.shields.io/badge/kernel-v3.5-brightgreen)](whiteswan_governance_kernel_v3_4.py)
+[![Kernel](https://img.shields.io/badge/kernel-v3.5-brightgreen)](whiteswan/whiteswan_governance_kernel_v3_4.py)
 [![Tests](https://img.shields.io/badge/tests-122%20passing-brightgreen)](tests/)
 
 -----
@@ -97,16 +97,19 @@ These boundaries are architectural features, not omissions:
 ## Repository Structure
 
 ```
-whiteswan_governance_kernel_v3_4.py   # Core governance kernel — 23 invariants, runtime enforcement
-whiteswan_api_v35.py                  # REST API wrapper — exposes kernel over HTTP
-kernel_v35.py                         # Kernel v3.5 with hardened invariant set
-integration_test_v35.py               # Full integration test suite (122 tests passing)
+whiteswan/
+  whiteswan_governance_kernel_v3_4.py # Core governance kernel — 23 invariants, runtime enforcement
+  whiteswan_api_v35.py                # REST API wrapper — exposes kernel over HTTP
+  kernel_v35.py                       # Kernel v3.5 with hardened invariant set
+
+tests/
+  integration_test_v35.py             # Full integration test suite
+  test_whiteswan_governance_kernel.py # Governance kernel unit tests
+  test_rekor_anchor.py                # Rekor anchor tests
 
 app/
   main.py                             # Flask dashboard — governance status cards
   templates/                          # Jinja2 templates
-
-tests/                                # Unit and integration test suites
 
 data/
   posts.json                          # Dashboard content data
@@ -126,10 +129,10 @@ render.yaml                           # Render deployment config
 pip install -r requirements.txt
 
 # Run the governance kernel API
-python whiteswan_api_v35.py
+python whiteswan/whiteswan_api_v35.py
 
-# Run the integration test suite
-python integration_test_v35.py
+# Run all tests
+pytest tests/
 
 # Run the Flask governance dashboard
 python app/main.py
