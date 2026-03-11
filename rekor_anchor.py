@@ -13,8 +13,7 @@ import json
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
-
+from typing import Any
 from urllib import error, request
 
 REKOR_BASE_URL = "https://rekor.sigstore.dev"
@@ -34,12 +33,12 @@ class RekorReceipt:
     integrated_time: str
     log_id: str
     entry_uuid: str
-    inclusion_proof: Dict[str, Any]
+    inclusion_proof: dict[str, Any]
     signed_entry_ts: str
     rekor_url: str
     schema_version: str = "ws-rekor-v1.0"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     def verify_url(self) -> str:
@@ -95,7 +94,7 @@ class RekorAnchor:
 
     def verify(
         self,
-        receipt: Dict[str, Any],
+        receipt: dict[str, Any],
         decision_hash_hex: str,
         signature_hex: str,
     ) -> bool:
@@ -131,7 +130,7 @@ class RekorAnchor:
 
         return True
 
-    def fetch_by_hash(self, decision_hash_hex: str) -> Optional[Dict[str, Any]]:
+    def fetch_by_hash(self, decision_hash_hex: str) -> dict[str, Any] | None:
         """Search Rekor for entries matching a decision hash."""
         if self._offline:
             return None
@@ -147,7 +146,7 @@ class RekorAnchor:
         except Exception:
             return None
 
-    def log_info(self) -> Dict[str, Any]:
+    def log_info(self) -> dict[str, Any]:
         """Fetch Rekor log metadata (tree size, root hash, etc.)."""
         if self._offline:
             return {"offline_mode": True}
@@ -156,13 +155,12 @@ class RekorAnchor:
         except Exception as exc:
             return {"error": str(exc)}
 
-
-    def _http_get_json(self, url: str) -> Dict[str, Any]:
+    def _http_get_json(self, url: str) -> dict[str, Any]:
         req = request.Request(url, headers=self._headers, method="GET")
         with request.urlopen(req, timeout=self._timeout) as response:
             return json.loads(response.read().decode())
 
-    def _http_post_json(self, url: str, payload: Dict[str, Any]) -> tuple[int, str]:
+    def _http_post_json(self, url: str, payload: dict[str, Any]) -> tuple[int, str]:
         req = request.Request(
             url,
             data=json.dumps(payload).encode(),
@@ -175,8 +173,8 @@ class RekorAnchor:
         except error.HTTPError as exc:
             return exc.code, exc.read().decode()
 
-    def _post_with_retry(self, entry: Dict[str, Any]) -> Dict[str, Any]:
-        last_err: Optional[str] = None
+    def _post_with_retry(self, entry: dict[str, Any]) -> dict[str, Any]:
+        last_err: str | None = None
         for attempt in range(MAX_RETRY):
             try:
                 status, body = self._http_post_json(self._entries_url, entry)
@@ -197,7 +195,7 @@ class RekorAnchor:
             f"Rekor submission failed after {MAX_RETRY} attempts: {last_err}"
         )
 
-    def _fetch_existing(self, entry: Dict[str, Any]) -> Dict[str, Any]:
+    def _fetch_existing(self, entry: dict[str, Any]) -> dict[str, Any]:
         """Retrieve an already-submitted entry (409 conflict case)."""
         decision_hash = entry["spec"]["data"]["hash"]["value"]
         try:
@@ -213,7 +211,7 @@ class RekorAnchor:
 
         raise RekorSubmissionError("Entry already exists but could not be retrieved")
 
-    def _parse_receipt(self, response: Dict[str, Any]) -> RekorReceipt:
+    def _parse_receipt(self, response: dict[str, Any]) -> RekorReceipt:
         """Parse Rekor API response into a RekorReceipt."""
         uuid = next(iter(response.keys()))
         entry = response[uuid]
@@ -258,7 +256,7 @@ def patch_mgi_authorize(mgi_class: Any, anchor: RekorAnchor) -> Any:
     """Monkey-patch ``MGI.authorize`` to include Rekor anchoring."""
     original_authorize = mgi_class.authorize
 
-    def authorize_with_rekor(self: Any, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def authorize_with_rekor(self: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
         envelope = original_authorize(self, *args, **kwargs)
 
         if envelope.get("outcome") == "ALLOW":

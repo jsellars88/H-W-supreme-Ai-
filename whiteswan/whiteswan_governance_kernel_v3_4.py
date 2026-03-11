@@ -19,15 +19,17 @@ import secrets
 import sqlite3
 import threading
 from collections import defaultdict
-from dataclasses import dataclass, asdict, field
+from collections.abc import Callable
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 try:
-    from nacl.signing import SigningKey, VerifyKey
     from nacl.encoding import HexEncoder
     from nacl.exceptions import BadSignatureError
+    from nacl.signing import SigningKey, VerifyKey
+
     CRYPTO_BACKEND = "pynacl"
 except ModuleNotFoundError:
     import hmac
@@ -42,7 +44,9 @@ except ModuleNotFoundError:
 
         @staticmethod
         def decode(data: bytes) -> bytes:
-            return bytes.fromhex(data.decode() if isinstance(data, (bytes, bytearray)) else str(data))
+            return bytes.fromhex(
+                data.decode() if isinstance(data, (bytes, bytearray)) else str(data)
+            )
 
     class _SignedMessage:
         def __init__(self, signature: bytes):
@@ -65,7 +69,7 @@ except ModuleNotFoundError:
             self._key = key
 
         @classmethod
-        def generate(cls) -> "SigningKey":
+        def generate(cls) -> SigningKey:
             return cls(secrets.token_bytes(32))
 
         @property
@@ -103,39 +107,48 @@ DEFAULT_QUORUM_THRESHOLD = 0.5
 # TIME UTILITIES
 # =============================================================================
 
+
 def now_utc() -> datetime.datetime:
     return datetime.datetime.now(datetime.timezone.utc)
+
 
 def iso_z(dt: datetime.datetime) -> str:
     return dt.astimezone(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 
+
 def now_z() -> str:
     return iso_z(now_utc())
+
 
 def sha256_bytes(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
+
 def generate_nonce() -> str:
     return secrets.token_hex(16)
+
 
 def _json_canon(obj: Any) -> str:
     return json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str)
 
+
 # =============================================================================
 # CRYPTO REGISTRY (extensible)
 # =============================================================================
+
 
 @dataclass
 class CryptoAlgorithm:
     name: str
     sign: Callable[[bytes, Any], bytes]
     verify: Callable[[bytes, bytes, Any], bool]
-    key_gen: Callable[[], Tuple[Any, Any]]
+    key_gen: Callable[[], tuple[Any, Any]]
     deprecated: bool = False
+
 
 class CryptoRegistry:
     def __init__(self):
-        self._algorithms: Dict[str, CryptoAlgorithm] = {}
+        self._algorithms: dict[str, CryptoAlgorithm] = {}
         self._default = DEFAULT_ALGORITHM
         self._register_ed25519()
 
@@ -150,23 +163,25 @@ class CryptoRegistry:
             except BadSignatureError:
                 return False
 
-        def key_gen() -> Tuple[SigningKey, VerifyKey]:
+        def key_gen() -> tuple[SigningKey, VerifyKey]:
             sk = SigningKey.generate()
             return sk, sk.verify_key
 
         self._algorithms["ed25519"] = CryptoAlgorithm("ed25519", sign, verify, key_gen)
 
-    def get(self, name: str) -> Optional[CryptoAlgorithm]:
+    def get(self, name: str) -> CryptoAlgorithm | None:
         return self._algorithms.get(name)
 
     def default(self) -> CryptoAlgorithm:
         return self._algorithms[self._default]
+
 
 CRYPTO = CryptoRegistry()
 
 # =============================================================================
 # TIME AUTHORITY
 # =============================================================================
+
 
 @dataclass
 class TimeHealth:
@@ -175,6 +190,7 @@ class TimeHealth:
     drift_ms: int = 0
     note: str = ""
 
+
 class TimeAuthority:
     def now(self) -> datetime.datetime:
         return now_utc()
@@ -182,9 +198,11 @@ class TimeAuthority:
     def health(self) -> TimeHealth:
         return TimeHealth(ok=True, source="system_clock", drift_ms=0, note="production")
 
+
 # =============================================================================
 # TIERS / SCOPES
 # =============================================================================
+
 
 class ActionTier(Enum):
     T0_KERNEL = 0
@@ -192,6 +210,7 @@ class ActionTier(Enum):
     T2_ESCALATION = 2
     T3_INTERVENTION = 3
     T4_IRREVERSIBLE = 4
+
 
 class ActionScope(Enum):
     SENSING = "sensing"
@@ -206,7 +225,8 @@ class ActionScope(Enum):
     IRREVERSIBLE_MEDICAL = "irreversible_medical"
     DELEGATE_AUTHORITY = "delegate_authority"
 
-SCOPE_TIER_MAP: Dict[ActionScope, ActionTier] = {
+
+SCOPE_TIER_MAP: dict[ActionScope, ActionTier] = {
     ActionScope.SENSING: ActionTier.T1_SAFE,
     ActionScope.NAVIGATION: ActionTier.T1_SAFE,
     ActionScope.ALERT_ESCALATION: ActionTier.T2_ESCALATION,
@@ -224,33 +244,49 @@ SCOPE_TIER_MAP: Dict[ActionScope, ActionTier] = {
 # GEO CONSTRAINTS
 # =============================================================================
 
+
 @dataclass
 class GeoConstraint:
-    allowed_regions: Set[str] = field(default_factory=set)
-    denied_regions: Set[str] = field(default_factory=set)
-    max_radius_km: Optional[float] = None
-    anchor_lat: Optional[float] = None
-    anchor_lon: Optional[float] = None
+    allowed_regions: set[str] = field(default_factory=set)
+    denied_regions: set[str] = field(default_factory=set)
+    max_radius_km: float | None = None
+    anchor_lat: float | None = None
+    anchor_lon: float | None = None
 
-    def check(self, region: Optional[str] = None, lat: Optional[float] = None, lon: Optional[float] = None) -> Tuple[bool, str]:
+    def check(
+        self, region: str | None = None, lat: float | None = None, lon: float | None = None
+    ) -> tuple[bool, str]:
         if self.denied_regions and region in self.denied_regions:
             return False, f"region {region} denied"
         if self.allowed_regions and (region not in self.allowed_regions):
             return False, f"region {region} not in allowed set"
-        if self.max_radius_km and self.anchor_lat is not None and lat is not None and lon is not None:
+        if (
+            self.max_radius_km
+            and self.anchor_lat is not None
+            and lat is not None
+            and lon is not None
+        ):
             import math
-            R = 6371
+
+            earth_radius_km = 6371
             dlat = math.radians(lat - self.anchor_lat)
             dlon = math.radians(lon - (self.anchor_lon or 0))
-            a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(self.anchor_lat)) * math.cos(math.radians(lat)) * math.sin(dlon / 2) ** 2
-            dist = 2 * R * math.asin(math.sqrt(a))
+            a = (
+                math.sin(dlat / 2) ** 2
+                + math.cos(math.radians(self.anchor_lat))
+                * math.cos(math.radians(lat))
+                * math.sin(dlon / 2) ** 2
+            )
+            dist = 2 * earth_radius_km * math.asin(math.sqrt(a))
             if dist > self.max_radius_km:
                 return False, f"distance {dist:.1f}km exceeds max {self.max_radius_km}km"
         return True, "ok"
 
+
 # =============================================================================
 # REFUSALS
 # =============================================================================
+
 
 class RefusalTier(Enum):
     R1_POLICY = "R1_POLICY"
@@ -258,6 +294,7 @@ class RefusalTier(Enum):
     R3_SAS = "R3_SAS"
     R4_INTEGRITY = "R4_INTEGRITY"
     R5_UNKNOWN = "R5_UNKNOWN"
+
 
 class RefusalReason(Enum):
     NOT_REGISTERED = "NOT_REGISTERED"
@@ -281,38 +318,58 @@ class RefusalReason(Enum):
     RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"
     NONCE_CONTEXT_MISMATCH = "NONCE_CONTEXT_MISMATCH"
 
+
 # =============================================================================
 # EXCEPTIONS
 # =============================================================================
 
-class GovernanceViolation(Exception): pass
-class SASActiveError(GovernanceViolation): pass
-class InsufficientAuthorityError(GovernanceViolation): pass
-class OperatorNotAuthorizedError(GovernanceViolation): pass
-class IntegrityError(GovernanceViolation): pass
-class GeofenceViolation(GovernanceViolation): pass
+
+class GovernanceViolationError(Exception):
+    pass
+
+
+class SASActiveError(GovernanceViolationError):
+    pass
+
+
+class InsufficientAuthorityError(GovernanceViolationError):
+    pass
+
+
+class OperatorNotAuthorizedError(GovernanceViolationError):
+    pass
+
+
+class IntegrityError(GovernanceViolationError):
+    pass
+
+
+class GeofenceViolationError(GovernanceViolationError):
+    pass
+
 
 # =============================================================================
 # TELEMETRY (Prometheus-ish)
 # =============================================================================
 
+
 class Telemetry:
     def __init__(self):
         self._lock = threading.Lock()
-        self._counters: Dict[str, int] = defaultdict(int)
-        self._gauges: Dict[str, float] = {}
+        self._counters: dict[str, int] = defaultdict(int)
+        self._gauges: dict[str, float] = {}
 
-    def inc(self, name: str, labels: Dict[str, str] = None, value: int = 1):
+    def inc(self, name: str, labels: dict[str, str] = None, value: int = 1):
         key = self._key(name, labels)
         with self._lock:
             self._counters[key] += value
 
-    def set_gauge(self, name: str, value: float, labels: Dict[str, str] = None):
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] = None):
         key = self._key(name, labels)
         with self._lock:
             self._gauges[key] = value
 
-    def _key(self, name: str, labels: Dict[str, str] = None) -> str:
+    def _key(self, name: str, labels: dict[str, str] = None) -> str:
         if not labels:
             return name
         label_str = ",".join(f'{k}="{v}"' for k, v in sorted(labels.items()))
@@ -329,13 +386,15 @@ class Telemetry:
                 lines.append(f"{k} {v}")
         return "\n".join(lines)
 
-    def export_dict(self) -> Dict[str, Any]:
+    def export_dict(self) -> dict[str, Any]:
         with self._lock:
             return {"counters": dict(self._counters), "gauges": dict(self._gauges)}
+
 
 # =============================================================================
 # GUARDIAN VAULT X — Seals + Witness hooks
 # =============================================================================
+
 
 @dataclass
 class AuditSeal:
@@ -345,18 +404,26 @@ class AuditSeal:
     entries_hash: str
     sealed_at: str
     kernel_sig: str
-    witness_sigs: Dict[str, str] = field(default_factory=dict)
+    witness_sigs: dict[str, str] = field(default_factory=dict)
+
 
 class GuardianVaultX:
     def __init__(self, seal_interval: int = DEFAULT_SEAL_INTERVAL):
-        self._entries: List[Dict[str, Any]] = []
+        self._entries: list[dict[str, Any]] = []
         self._prev_hash: str = "0" * 64
-        self._seals: List[AuditSeal] = []
+        self._seals: list[AuditSeal] = []
         self._seal_interval = seal_interval
         self._last_sealed_seq = -1
 
-    def log(self, stream: str, event: str, **details) -> Dict[str, Any]:
-        entry = {"seq": len(self._entries), "ts": now_z(), "stream": stream, "event": event, "details": details, "prev_hash": self._prev_hash}
+    def log(self, stream: str, event: str, **details) -> dict[str, Any]:
+        entry = {
+            "seq": len(self._entries),
+            "ts": now_z(),
+            "stream": stream,
+            "event": event,
+            "details": details,
+            "prev_hash": self._prev_hash,
+        }
         entry_json = _json_canon(entry)
         entry["hash"] = hashlib.sha256(entry_json.encode()).hexdigest()
         self._entries.append(entry)
@@ -378,22 +445,24 @@ class GuardianVaultX:
     def should_seal(self) -> bool:
         return len(self._entries) - self._last_sealed_seq - 1 >= self._seal_interval
 
-    def create_seal(self, kernel_sign_hex: Callable[[bytes], str]) -> Optional[AuditSeal]:
+    def create_seal(self, kernel_sign_hex: Callable[[bytes], str]) -> AuditSeal | None:
         seq_start = self._last_sealed_seq + 1
         seq_end = len(self._entries) - 1
         if seq_end < seq_start:
             return None
-        segment = self._entries[seq_start: seq_end + 1]
+        segment = self._entries[seq_start : seq_end + 1]
         entries_hash = sha256_bytes(_json_canon(segment).encode())
 
-        seal_payload = _json_canon({
-            "schema": SCHEMA_VERSION,
-            "kind": "AUDIT_SEAL",
-            "seq_start": seq_start,
-            "seq_end": seq_end,
-            "entries_hash": entries_hash,
-            "sealed_at": now_z(),
-        }).encode()
+        seal_payload = _json_canon(
+            {
+                "schema": SCHEMA_VERSION,
+                "kind": "AUDIT_SEAL",
+                "seq_start": seq_start,
+                "seq_end": seq_end,
+                "entries_hash": entries_hash,
+                "sealed_at": now_z(),
+            }
+        ).encode()
 
         seal = AuditSeal(
             seal_id=secrets.token_hex(8),
@@ -405,7 +474,9 @@ class GuardianVaultX:
         )
         self._seals.append(seal)
         self._last_sealed_seq = seq_end
-        self.log("VAULT", "SEAL_CREATED", seal_id=seal.seal_id, seq_start=seq_start, seq_end=seq_end)
+        self.log(
+            "VAULT", "SEAL_CREATED", seal_id=seal.seal_id, seq_start=seq_start, seq_end=seq_end
+        )
         return seal
 
     def add_witness_signature(self, seal_id: str, witness_id: str, signature: str) -> bool:
@@ -416,18 +487,20 @@ class GuardianVaultX:
                 return True
         return False
 
-    def export(self) -> List[Dict[str, Any]]:
+    def export(self) -> list[dict[str, Any]]:
         return list(self._entries)
 
-    def export_seals(self) -> List[Dict[str, Any]]:
+    def export_seals(self) -> list[dict[str, Any]]:
         return [asdict(s) for s in self._seals]
 
-    def tail(self, n: int = 50) -> List[Dict[str, Any]]:
+    def tail(self, n: int = 50) -> list[dict[str, Any]]:
         return self._entries[-n:]
+
 
 # =============================================================================
 # PERSISTENCE
 # =============================================================================
+
 
 class KernelDB:
     def __init__(self, db_file: str):
@@ -564,55 +637,113 @@ class KernelDB:
         r = self.conn.execute("PRAGMA integrity_check;").fetchone()
         return r and r[0] == "ok"
 
-    def get_meta(self, k: str, default: str = None) -> Optional[str]:
+    def get_meta(self, k: str, default: str = None) -> str | None:
         r = self.conn.execute("SELECT v FROM meta WHERE k=?", (k,)).fetchone()
         return r[0] if r else default
 
     def set_meta(self, k: str, v: str):
         with self._lock:
-            self.conn.execute("INSERT INTO meta VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", (k, v))
+            self.conn.execute(
+                "INSERT INTO meta VALUES(?,?) ON CONFLICT(k) DO UPDATE SET v=excluded.v", (k, v)
+            )
             self.conn.commit()
 
     def upsert_op(self, r: dict):
         with self._lock:
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 INSERT INTO operators VALUES(?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(pubkey_hex) DO UPDATE SET
-                  revoked=excluded.revoked, reason=excluded.reason, geo_constraint_json=excluded.geo_constraint_json,
+                  revoked=excluded.revoked,
+                  reason=excluded.reason,
+                  geo_constraint_json=excluded.geo_constraint_json,
                   scopes_json=excluded.scopes_json
-            """, (r["pk"], r["kid"], r["name"], r["role"], r["scopes"], r.get("geo"), r["created"], r.get("revoked"), r.get("reason")))
+            """,
+                (
+                    r["pk"],
+                    r["kid"],
+                    r["name"],
+                    r["role"],
+                    r["scopes"],
+                    r.get("geo"),
+                    r["created"],
+                    r.get("revoked"),
+                    r.get("reason"),
+                ),
+            )
             self.conn.commit()
 
-    def get_op(self, pk: str) -> Optional[dict]:
+    def get_op(self, pk: str) -> dict | None:
         r = self.conn.execute("SELECT * FROM operators WHERE pubkey_hex=?", (pk,)).fetchone()
         if not r:
             return None
-        return {"pk": r[0], "kid": r[1], "name": r[2], "role": r[3], "scopes": r[4], "geo": r[5], "created": r[6], "revoked": r[7], "reason": r[8]}
+        return {
+            "pk": r[0],
+            "kid": r[1],
+            "name": r[2],
+            "role": r[3],
+            "scopes": r[4],
+            "geo": r[5],
+            "created": r[6],
+            "revoked": r[7],
+            "reason": r[8],
+        }
 
-    def list_ops(self) -> List[dict]:
-        rows = self.conn.execute("SELECT pubkey_hex,key_id,name,role,scopes_json,geo_constraint_json,created,revoked,reason FROM operators ORDER BY created DESC").fetchall()
+    def list_ops(self) -> list[dict]:
+        rows = self.conn.execute(
+
+                "SELECT pubkey_hex,key_id,name,role,scopes_json,geo_constraint_json,"
+                "created,revoked,reason FROM operators ORDER BY created DESC"
+
+        ).fetchall()
         out = []
         for r in rows:
-            out.append({
-                "pubkey_hex": r[0], "key_id": r[1], "name": r[2], "role": r[3],
-                "scopes": json.loads(r[4]) if r[4] else [],
-                "geo": json.loads(r[5]) if r[5] else None,
-                "created": r[6], "revoked": r[7], "reason": r[8],
-            })
+            out.append(
+                {
+                    "pubkey_hex": r[0],
+                    "key_id": r[1],
+                    "name": r[2],
+                    "role": r[3],
+                    "scopes": json.loads(r[4]) if r[4] else [],
+                    "geo": json.loads(r[5]) if r[5] else None,
+                    "created": r[6],
+                    "revoked": r[7],
+                    "reason": r[8],
+                }
+            )
         return out
 
     def create_session(self, s: dict):
         with self._lock:
-            self.conn.execute("INSERT INTO sessions VALUES(?,?,?,?,?,?,?,?)",
-                (s["session_id"], s["operator_pubkey"], s["operator_key_id"], s["issued_at"], s["expires_at"], s["max_tier"], s.get("delegator_session"), 1))
+            self.conn.execute(
+                "INSERT INTO sessions VALUES(?,?,?,?,?,?,?,?)",
+                (
+                    s["session_id"],
+                    s["operator_pubkey"],
+                    s["operator_key_id"],
+                    s["issued_at"],
+                    s["expires_at"],
+                    s["max_tier"],
+                    s.get("delegator_session"),
+                    1,
+                ),
+            )
             self.conn.commit()
 
-    def get_session(self, sid: str) -> Optional[dict]:
+    def get_session(self, sid: str) -> dict | None:
         r = self.conn.execute("SELECT * FROM sessions WHERE session_id=?", (sid,)).fetchone()
         if not r:
             return None
-        return {"session_id": r[0], "operator_pubkey": r[1], "operator_key_id": r[2], "issued_at": r[3],
-                "expires_at": r[4], "max_tier": int(r[5]), "delegator_session": r[6], "valid": bool(r[7])}
+        return {
+            "session_id": r[0],
+            "operator_pubkey": r[1],
+            "operator_key_id": r[2],
+            "issued_at": r[3],
+            "expires_at": r[4],
+            "max_tier": int(r[5]),
+            "delegator_session": r[6],
+            "valid": bool(r[7]),
+        }
 
     def invalidate_session(self, sid: str):
         with self._lock:
@@ -622,12 +753,32 @@ class KernelDB:
 
     def upsert_hs(self, h: dict):
         with self._lock:
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 INSERT INTO handshakes VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(token_id) DO UPDATE SET valid=excluded.valid
-            """, (h["tid"], h["ikid"], h["iname"], h["ipk"], h["scope"], h["nonce"], h.get("nonce_ctx"),
-                  h["issued"], h["expires"], h["session_id"], h["policy_version"], h.get("model_fp"),
-                  h["ophash"], h["opsig"], h["kkey"], h["ksig"], h["recv"], 1 if h["valid"] else 0))
+            """,
+                (
+                    h["tid"],
+                    h["ikid"],
+                    h["iname"],
+                    h["ipk"],
+                    h["scope"],
+                    h["nonce"],
+                    h.get("nonce_ctx"),
+                    h["issued"],
+                    h["expires"],
+                    h["session_id"],
+                    h["policy_version"],
+                    h.get("model_fp"),
+                    h["ophash"],
+                    h["opsig"],
+                    h["kkey"],
+                    h["ksig"],
+                    h["recv"],
+                    1 if h["valid"] else 0,
+                ),
+            )
             self.conn.commit()
 
     def revoke_all_hs(self):
@@ -635,89 +786,159 @@ class KernelDB:
             self.conn.execute("UPDATE handshakes SET valid=0")
             self.conn.commit()
 
-    def find_hs(self, scope: str, nonce: str) -> List[dict]:
-        rows = self.conn.execute("""
+    def find_hs(self, scope: str, nonce: str) -> list[dict]:
+        rows = self.conn.execute(
+            """
             SELECT * FROM handshakes WHERE scope=? AND nonce=? AND valid=1 ORDER BY received
-        """, (scope, nonce)).fetchall()
-        return [{"tid": r[0], "ikid": r[1], "iname": r[2], "ipk": r[3], "scope": r[4], "nonce": r[5],
-                 "nonce_ctx": r[6], "issued": r[7], "expires": r[8], "session_id": r[9], "policy_version": r[10],
-                 "model_fp": r[11], "ophash": r[12], "opsig": r[13], "kkey": r[14], "ksig": r[15],
-                 "recv": r[16], "valid": bool(r[17])} for r in rows]
+        """,
+            (scope, nonce),
+        ).fetchall()
+        return [
+            {
+                "tid": r[0],
+                "ikid": r[1],
+                "iname": r[2],
+                "ipk": r[3],
+                "scope": r[4],
+                "nonce": r[5],
+                "nonce_ctx": r[6],
+                "issued": r[7],
+                "expires": r[8],
+                "session_id": r[9],
+                "policy_version": r[10],
+                "model_fp": r[11],
+                "ophash": r[12],
+                "opsig": r[13],
+                "kkey": r[14],
+                "ksig": r[15],
+                "recv": r[16],
+                "valid": bool(r[17]),
+            }
+            for r in rows
+        ]
 
     def replay_count(self) -> int:
         return self.conn.execute("SELECT COUNT(*) FROM replay").fetchone()[0]
 
     def replay_exists(self, scope: str, nonce: str) -> bool:
-        return self.conn.execute("SELECT 1 FROM replay WHERE scope=? AND nonce=?", (scope, nonce)).fetchone() is not None
+        return (
+            self.conn.execute(
+                "SELECT 1 FROM replay WHERE scope=? AND nonce=?", (scope, nonce)
+            ).fetchone()
+            is not None
+        )
 
     def add_replay(self, scope: str, nonce: str):
         with self._lock:
-            self.conn.execute("INSERT INTO replay(scope, nonce, consumed) VALUES(?,?,?)", (scope, nonce, now_z()))
+            self.conn.execute(
+                "INSERT INTO replay(scope, nonce, consumed) VALUES(?,?,?)", (scope, nonce, now_z())
+            )
             self.conn.commit()
 
     def capsule(self, cid: str, kind: str, tid: str, data: bytes):
         with self._lock:
-            self.conn.execute("INSERT INTO capsules VALUES(?,?,?,?,?,?)", (cid, now_z(), kind, tid, sha256_bytes(data), data))
+            self.conn.execute(
+                "INSERT INTO capsules VALUES(?,?,?,?,?,?)",
+                (cid, now_z(), kind, tid, sha256_bytes(data), data),
+            )
             self.conn.commit()
 
-    def list_capsules(self, tid: str) -> List[dict]:
-        return [{"capsule_id": r[0], "created_at": r[1], "kind": r[2], "token_id": r[3], "sha256": r[4]}
-                for r in self.conn.execute("SELECT id, created, kind, token, sha FROM capsules WHERE token=?", (tid,)).fetchall()]
+    def list_capsules(self, tid: str) -> list[dict]:
+        return [
+            {"capsule_id": r[0], "created_at": r[1], "kind": r[2], "token_id": r[3], "sha256": r[4]}
+            for r in self.conn.execute(
+                "SELECT id, created, kind, token, sha FROM capsules WHERE token=?", (tid,)
+            ).fetchall()
+        ]
 
-    def add_policy(self, version: str, old: str, new: str, reason: str, rollback_allowed: bool = True):
+    def add_policy(
+        self, version: str, old: str, new: str, reason: str, rollback_allowed: bool = True
+    ):
         with self._lock:
-            self.conn.execute("INSERT INTO policy_hist(version, changed, old, new, reason, rollback_allowed) VALUES(?,?,?,?,?,?)",
-                (version, now_z(), old, new, reason, 1 if rollback_allowed else 0))
+            self.conn.execute(
+                (
+                    "INSERT INTO policy_hist(version, changed, old, new, reason, "
+                    "rollback_allowed) VALUES(?,?,?,?,?,?)"
+                ),
+                (version, now_z(), old, new, reason, 1 if rollback_allowed else 0),
+            )
             self.conn.commit()
 
-    def get_policy_history(self) -> List[dict]:
-        return [{"id": r[0], "version": r[1], "changed": r[2], "old": r[3], "new": r[4], "reason": r[5], "rollback_allowed": bool(r[6])}
-                for r in self.conn.execute("SELECT * FROM policy_hist ORDER BY id DESC").fetchall()]
+    def get_policy_history(self) -> list[dict]:
+        return [
+            {
+                "id": r[0],
+                "version": r[1],
+                "changed": r[2],
+                "old": r[3],
+                "new": r[4],
+                "reason": r[5],
+                "rollback_allowed": bool(r[6]),
+            }
+            for r in self.conn.execute("SELECT * FROM policy_hist ORDER BY id DESC").fetchall()
+        ]
 
-    def get_sas(self) -> Tuple[bool, Optional[str]]:
+    def get_sas(self) -> tuple[bool, str | None]:
         r = self.conn.execute("SELECT active, reason FROM sas WHERE id=1").fetchone()
         return (bool(r[0]), r[1])
 
-    def set_sas(self, active: bool, reason: Optional[str]):
+    def set_sas(self, active: bool, reason: str | None):
         with self._lock:
-            self.conn.execute("UPDATE sas SET active=?, reason=? WHERE id=1", (1 if active else 0, reason))
+            self.conn.execute(
+                "UPDATE sas SET active=?, reason=? WHERE id=1", (1 if active else 0, reason)
+            )
             self.conn.commit()
 
     def add_trustee(self, tid: str, pubkey: str, name: str):
         with self._lock:
-            self.conn.execute("INSERT OR REPLACE INTO quorum_trustees VALUES(?,?,?,1)", (tid, pubkey, name))
+            self.conn.execute(
+                "INSERT OR REPLACE INTO quorum_trustees VALUES(?,?,?,1)", (tid, pubkey, name)
+            )
             self.conn.commit()
 
-    def get_active_trustees(self) -> List[dict]:
-        return [{"trustee_id": r[0], "pubkey_hex": r[1], "name": r[2]}
-                for r in self.conn.execute("SELECT trustee_id, pubkey_hex, name FROM quorum_trustees WHERE active=1").fetchall()]
+    def get_active_trustees(self) -> list[dict]:
+        return [
+            {"trustee_id": r[0], "pubkey_hex": r[1], "name": r[2]}
+            for r in self.conn.execute(
+                "SELECT trustee_id, pubkey_hex, name FROM quorum_trustees WHERE active=1"
+            ).fetchall()
+        ]
 
-    def record_rate_violation(self, key_id: str) -> Tuple[int, str]:
+    def record_rate_violation(self, key_id: str) -> tuple[int, str]:
         with self._lock:
-            r = self.conn.execute("SELECT violations, backoff_until FROM rate_limits WHERE key_id=?", (key_id,)).fetchone()
+            r = self.conn.execute(
+                "SELECT violations, backoff_until FROM rate_limits WHERE key_id=?", (key_id,)
+            ).fetchone()
             if r:
                 violations = int(r[0]) + 1
-                backoff_seconds = min(2 ** violations, 3600)
+                backoff_seconds = min(2**violations, 3600)
             else:
                 violations = 1
                 backoff_seconds = 2
             backoff_until = iso_z(now_utc() + datetime.timedelta(seconds=backoff_seconds))
             self.conn.execute(
-                "INSERT INTO rate_limits VALUES(?,?,?,?) ON CONFLICT(key_id) DO UPDATE SET violations=?, last_violation=?, backoff_until=?",
+                (
+                    "INSERT INTO rate_limits VALUES(?,?,?,?) ON CONFLICT(key_id) "
+                    "DO UPDATE SET violations=?, last_violation=?, backoff_until=?"
+                ),
                 (key_id, violations, now_z(), backoff_until, violations, now_z(), backoff_until),
             )
             self.conn.commit()
             return violations, backoff_until
 
-    def check_rate_backoff(self, key_id: str) -> Optional[str]:
-        r = self.conn.execute("SELECT backoff_until FROM rate_limits WHERE key_id=?", (key_id,)).fetchone()
+    def check_rate_backoff(self, key_id: str) -> str | None:
+        r = self.conn.execute(
+            "SELECT backoff_until FROM rate_limits WHERE key_id=?", (key_id,)
+        ).fetchone()
         if r and r[0]:
             backoff = datetime.datetime.fromisoformat(r[0].replace("Z", "+00:00"))
             if now_utc() < backoff:
                 return r[0]
         return None
 
-    def add_decision(self, decision_id: str, scope: str, nonce: str, outcome: str, envelope: Dict[str, Any]):
+    def add_decision(
+        self, decision_id: str, scope: str, nonce: str, outcome: str, envelope: dict[str, Any]
+    ):
         with self._lock:
             self.conn.execute(
                 "INSERT OR REPLACE INTO decisions VALUES(?,?,?,?,?,?)",
@@ -725,17 +946,31 @@ class KernelDB:
             )
             self.conn.commit()
 
-    def get_decisions(self, scope: str, nonce: str) -> List[Dict[str, Any]]:
+    def get_decisions(self, scope: str, nonce: str) -> list[dict[str, Any]]:
         rows = self.conn.execute(
-            "SELECT id,decided_at,scope,nonce,outcome,envelope_json FROM decisions WHERE scope=? AND nonce=? ORDER BY decided_at DESC",
+            (
+                "SELECT id,decided_at,scope,nonce,outcome,envelope_json "
+                "FROM decisions WHERE scope=? AND nonce=? ORDER BY decided_at DESC"
+            ),
             (scope, nonce),
         ).fetchall()
-        return [{"id": r[0], "decided_at": r[1], "scope": r[2], "nonce": r[3], "outcome": r[4],
-                 "envelope": json.loads(r[5]) if r[5] else None} for r in rows]
+        return [
+            {
+                "id": r[0],
+                "decided_at": r[1],
+                "scope": r[2],
+                "nonce": r[3],
+                "outcome": r[4],
+                "envelope": json.loads(r[5]) if r[5] else None,
+            }
+            for r in rows
+        ]
+
 
 # =============================================================================
 # DATA CLASSES
 # =============================================================================
+
 
 @dataclass
 class OperatorRecord:
@@ -743,10 +978,10 @@ class OperatorRecord:
     name: str
     role: str
     pubkey_hex: str
-    allowed_scopes: Set[ActionScope]
-    geo_constraint: Optional[GeoConstraint]
+    allowed_scopes: set[ActionScope]
+    geo_constraint: GeoConstraint | None
     created_at: str
-    revoked_at: Optional[str] = None
+    revoked_at: str | None = None
 
     @property
     def is_active(self) -> bool:
@@ -754,6 +989,7 @@ class OperatorRecord:
 
     def can_authorize(self, scope: ActionScope) -> bool:
         return self.is_active and scope in self.allowed_scopes
+
 
 @dataclass
 class OperatorIdentity:
@@ -764,7 +1000,7 @@ class OperatorIdentity:
     verify_key: VerifyKey
 
     @classmethod
-    def generate(cls, name: str, role: str) -> "OperatorIdentity":
+    def generate(cls, name: str, role: str) -> OperatorIdentity:
         sk = SigningKey.generate()
         vk = sk.verify_key
         return cls(hashlib.sha256(vk.encode()).hexdigest()[:16], name, role, sk, vk)
@@ -779,6 +1015,7 @@ class OperatorIdentity:
     def export_private_hex(self) -> str:
         return self.signing_key.encode(encoder=HexEncoder).decode()
 
+
 @dataclass
 class ModelContext:
     model_provider: str
@@ -787,6 +1024,7 @@ class ModelContext:
     drift_score: float
     drift_threshold: float
     tier: str = "prod"
+
 
 @dataclass
 class HandshakePayload:
@@ -798,18 +1036,19 @@ class HandshakePayload:
     issuer_pubkey: str
     scope: str
     action_nonce: str
-    nonce_context_hash: Optional[str]
+    nonce_context_hash: str | None
     issued_at: str
     expires_at: str
     session_id: str
     policy_version: str
-    model_fingerprint_hash: Optional[str] = None
+    model_fingerprint_hash: str | None = None
 
     def to_bytes(self) -> bytes:
         return _json_canon(asdict(self)).encode()
 
     def sha256(self) -> str:
         return sha256_bytes(self.to_bytes())
+
 
 @dataclass
 class KernelAttestationPayload:
@@ -825,6 +1064,7 @@ class KernelAttestationPayload:
     def to_bytes(self) -> bytes:
         return _json_canon(asdict(self)).encode()
 
+
 @dataclass
 class Handshake:
     token_id: str
@@ -833,12 +1073,12 @@ class Handshake:
     issuer_pubkey: str
     scope: ActionScope
     action_nonce: str
-    nonce_context_hash: Optional[str]
+    nonce_context_hash: str | None
     issued_at: str
     expires_at: str
     session_id: str
     policy_version: str
-    model_fingerprint_hash: Optional[str]
+    model_fingerprint_hash: str | None
     operator_payload_hash: str
     operator_sig: str
     kernel_key_id: str
@@ -848,31 +1088,42 @@ class Handshake:
 
     def is_expired(self) -> bool:
         try:
-            return now_utc() > datetime.datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
+            return now_utc() > datetime.datetime.fromisoformat(
+                self.expires_at.replace("Z", "+00:00")
+            )
         except Exception:
             return True
 
     def operator_payload(self) -> HandshakePayload:
         return HandshakePayload(
-            schema=SCHEMA_VERSION, alg=DEFAULT_ALGORITHM, token_id=self.token_id,
-            issuer_key_id=self.issuer_key_id, issuer_name=self.issuer_name,
-            issuer_pubkey=self.issuer_pubkey, scope=self.scope.value,
-            action_nonce=self.action_nonce, nonce_context_hash=self.nonce_context_hash,
-            issued_at=self.issued_at, expires_at=self.expires_at,
-            session_id=self.session_id, policy_version=self.policy_version,
+            schema=SCHEMA_VERSION,
+            alg=DEFAULT_ALGORITHM,
+            token_id=self.token_id,
+            issuer_key_id=self.issuer_key_id,
+            issuer_name=self.issuer_name,
+            issuer_pubkey=self.issuer_pubkey,
+            scope=self.scope.value,
+            action_nonce=self.action_nonce,
+            nonce_context_hash=self.nonce_context_hash,
+            issued_at=self.issued_at,
+            expires_at=self.expires_at,
+            session_id=self.session_id,
+            policy_version=self.policy_version,
             model_fingerprint_hash=self.model_fingerprint_hash,
         )
+
 
 # =============================================================================
 # KERNEL KEY MANAGER
 # =============================================================================
 
+
 class KernelKeyManager:
     def __init__(self, key_file: str):
         self.key_file = Path(key_file)
-        self._sk: Optional[SigningKey] = None
-        self._vk: Optional[VerifyKey] = None
-        self._kid: Optional[str] = None
+        self._sk: SigningKey | None = None
+        self._vk: VerifyKey | None = None
+        self._kid: str | None = None
 
     def initialize(self, vault: GuardianVaultX):
         if self.key_file.exists():
@@ -899,9 +1150,11 @@ class KernelKeyManager:
     def sign_hex(self, msg: bytes) -> str:
         return self._sk.sign(msg).signature.hex()
 
+
 # =============================================================================
 # GOVERNOR
 # =============================================================================
+
 
 class Governor:
     POLICY_VERSION = "1.0"
@@ -933,10 +1186,16 @@ class Governor:
             self.db.set_meta("policy_version", self.POLICY_VERSION)
         self._policy_version = self.db.get_meta("policy_version") or self.POLICY_VERSION
 
-        self._rate_counts: Dict[str, int] = defaultdict(int)
+        self._rate_counts: dict[str, int] = defaultdict(int)
         self._rate_window = None
 
-        self.vault.log("KERNEL", "INITIALIZED", kernel_key_id=self._km.key_id, policy_version=self._policy_version, schema=SCHEMA_VERSION)
+        self.vault.log(
+            "KERNEL",
+            "INITIALIZED",
+            kernel_key_id=self._km.key_id,
+            policy_version=self._policy_version,
+            schema=SCHEMA_VERSION,
+        )
         self._startup_continuity_test()
 
     def _startup_continuity_test(self):
@@ -1001,7 +1260,9 @@ class Governor:
     def _check_rate_limit(self, key_id: str):
         backoff = self.db.check_rate_backoff(key_id)
         if backoff:
-            self._refuse(RefusalTier.R4_INTEGRITY, RefusalReason.RATE_LIMIT_EXCEEDED, backoff_until=backoff)
+            self._refuse(
+                RefusalTier.R4_INTEGRITY, RefusalReason.RATE_LIMIT_EXCEEDED, backoff_until=backoff
+            )
             raise IntegrityError(f"Rate backoff until {backoff}")
         minute = now_utc().replace(second=0, microsecond=0)
         if self._rate_window != minute:
@@ -1010,7 +1271,12 @@ class Governor:
         self._rate_counts[key_id] += 1
         if self._rate_counts[key_id] > DEFAULT_RATE_LIMIT_PER_MINUTE:
             violations, backoff = self.db.record_rate_violation(key_id)
-            self._refuse(RefusalTier.R4_INTEGRITY, RefusalReason.RATE_LIMIT_EXCEEDED, violations=violations, backoff_until=backoff)
+            self._refuse(
+                RefusalTier.R4_INTEGRITY,
+                RefusalReason.RATE_LIMIT_EXCEEDED,
+                violations=violations,
+                backoff_until=backoff,
+            )
             raise IntegrityError("Rate limit exceeded")
 
     def enter_sas(self, reason: str):
@@ -1026,39 +1292,70 @@ class Governor:
         required = max(1, int(len(trustees) * self.quorum_threshold) + 1)
         oid = secrets.token_hex(8)
         with self.db._lock:
-            self.db.conn.execute("INSERT INTO emergency_overrides VALUES(?,?,?,?,?,0)", (oid, now_z(), reason, required, json.dumps([])))
+            self.db.conn.execute(
+                "INSERT INTO emergency_overrides VALUES(?,?,?,?,?,0)",
+                (oid, now_z(), reason, required, json.dumps([])),
+            )
             self.db.conn.commit()
-        self.vault.log("KERNEL", "EMERGENCY_INITIATED", override_id=oid, required_sigs=required, reason=reason)
+        self.vault.log(
+            "KERNEL", "EMERGENCY_INITIATED", override_id=oid, required_sigs=required, reason=reason
+        )
         return oid
 
     def approve_emergency_override(self, override_id: str, trustee_id: str, signature: str) -> bool:
-        r = self.db.conn.execute("SELECT required_sigs, collected_sigs, executed FROM emergency_overrides WHERE override_id=?", (override_id,)).fetchone()
+        r = self.db.conn.execute(
+            (
+                "SELECT required_sigs, collected_sigs, executed "
+                "FROM emergency_overrides WHERE override_id=?"
+            ),
+            (override_id,),
+        ).fetchone()
         if not r or r[2]:
             return False
         required, collected = int(r[0]), json.loads(r[1])
         if trustee_id in [c["trustee_id"] for c in collected]:
             return False
         # Verify trustee signature against registered pubkey
-        trustee = self.db.conn.execute("SELECT pubkey_hex FROM quorum_trustees WHERE trustee_id=? AND active=1", (trustee_id,)).fetchone()
+        trustee = self.db.conn.execute(
+            "SELECT pubkey_hex FROM quorum_trustees WHERE trustee_id=? AND active=1", (trustee_id,)
+        ).fetchone()
         if trustee and trustee[0]:
             try:
                 vk = VerifyKey(bytes.fromhex(trustee[0]))
                 vk.verify(override_id.encode(), bytes.fromhex(signature))
             except Exception:
-                self.vault.log("KERNEL", "EMERGENCY_APPROVAL_REJECTED", override_id=override_id, trustee_id=trustee_id, reason="bad_signature")
+                self.vault.log(
+                    "KERNEL",
+                    "EMERGENCY_APPROVAL_REJECTED",
+                    override_id=override_id,
+                    trustee_id=trustee_id,
+                    reason="bad_signature",
+                )
                 return False
         collected.append({"trustee_id": trustee_id, "signature": signature, "at": now_z()})
         with self.db._lock:
-            self.db.conn.execute("UPDATE emergency_overrides SET collected_sigs=? WHERE override_id=?", (json.dumps(collected), override_id))
+            self.db.conn.execute(
+                "UPDATE emergency_overrides SET collected_sigs=? WHERE override_id=?",
+                (json.dumps(collected), override_id),
+            )
             self.db.conn.commit()
-        self.vault.log("KERNEL", "EMERGENCY_APPROVAL", override_id=override_id, trustee_id=trustee_id, count=len(collected), required=required)
+        self.vault.log(
+            "KERNEL",
+            "EMERGENCY_APPROVAL",
+            override_id=override_id,
+            trustee_id=trustee_id,
+            count=len(collected),
+            required=required,
+        )
         if len(collected) >= required:
             return self._execute_emergency_override(override_id)
         return True
 
     def _execute_emergency_override(self, override_id: str) -> bool:
         with self.db._lock:
-            self.db.conn.execute("UPDATE emergency_overrides SET executed=1 WHERE override_id=?", (override_id,))
+            self.db.conn.execute(
+                "UPDATE emergency_overrides SET executed=1 WHERE override_id=?", (override_id,)
+            )
             self.db.conn.commit()
         if self._sas_active:
             self._sas_active = False
@@ -1067,7 +1364,7 @@ class Governor:
         self.vault.log("KERNEL", "EMERGENCY_EXECUTED", override_id=override_id)
         return True
 
-    def _get_operator_record(self, pk: str) -> Optional[OperatorRecord]:
+    def _get_operator_record(self, pk: str) -> OperatorRecord | None:
         r = self.db.get_op(pk)
         if not r:
             return None
@@ -1082,24 +1379,36 @@ class Governor:
                 anchor_lon=gd.get("anchor_lon"),
             )
         scopes = set(ActionScope(s) for s in json.loads(r["scopes"])) if r.get("scopes") else set()
-        return OperatorRecord(r["kid"], r["name"], r["role"], r["pk"], scopes, geo, r["created"], r.get("revoked"))
+        return OperatorRecord(
+            r["kid"], r["name"], r["role"], r["pk"], scopes, geo, r["created"], r.get("revoked")
+        )
 
-    def register_operator(self, op: OperatorIdentity, scopes: Set[ActionScope], geo: GeoConstraint = None) -> OperatorRecord:
+    def register_operator(
+        self, op: OperatorIdentity, scopes: set[ActionScope], geo: GeoConstraint = None
+    ) -> OperatorRecord:
         geo_json = None
         if geo:
-            geo_json = _json_canon({
-                "allowed_regions": list(geo.allowed_regions),
-                "denied_regions": list(geo.denied_regions),
-                "max_radius_km": geo.max_radius_km,
-                "anchor_lat": geo.anchor_lat,
-                "anchor_lon": geo.anchor_lon,
-            })
+            geo_json = _json_canon(
+                {
+                    "allowed_regions": list(geo.allowed_regions),
+                    "denied_regions": list(geo.denied_regions),
+                    "max_radius_km": geo.max_radius_km,
+                    "anchor_lat": geo.anchor_lat,
+                    "anchor_lon": geo.anchor_lon,
+                }
+            )
         rec = OperatorRecord(op.key_id, op.name, op.role, op.pubkey_hex, set(scopes), geo, now_z())
-        self.db.upsert_op({
-            "pk": rec.pubkey_hex, "kid": rec.key_id, "name": rec.name, "role": rec.role,
-            "scopes": json.dumps([s.value for s in rec.allowed_scopes]),
-            "geo": geo_json, "created": rec.created_at,
-        })
+        self.db.upsert_op(
+            {
+                "pk": rec.pubkey_hex,
+                "kid": rec.key_id,
+                "name": rec.name,
+                "role": rec.role,
+                "scopes": json.dumps([s.value for s in rec.allowed_scopes]),
+                "geo": geo_json,
+                "created": rec.created_at,
+            }
+        )
         self.vault.log("KERNEL", "OPERATOR_REGISTERED", key_id=rec.key_id, name=rec.name)
         self.telemetry.inc("operators_registered_total")
         return rec
@@ -1112,8 +1421,13 @@ class Governor:
             self.db.upsert_op(rec)
             self.vault.log("KERNEL", "OPERATOR_REVOKED", pubkey_hex=pubkey_hex[:16], reason=reason)
 
-    def create_session(self, op: OperatorIdentity, max_tier: ActionTier = ActionTier.T4_IRREVERSIBLE,
-                       ttl_seconds: Optional[int] = None, delegator_session: Optional[str] = None) -> str:
+    def create_session(
+        self,
+        op: OperatorIdentity,
+        max_tier: ActionTier = ActionTier.T4_IRREVERSIBLE,
+        ttl_seconds: int | None = None,
+        delegator_session: str | None = None,
+    ) -> str:
         rec = self._get_operator_record(op.pubkey_hex)
         if not rec or not rec.is_active:
             raise OperatorNotAuthorizedError("Not registered/active")
@@ -1126,12 +1440,24 @@ class Governor:
                 max_tier = ActionTier(ds["max_tier"])
         ttl = ttl_seconds or self.session_ttl
         sid = secrets.token_hex(16)
-        self.db.create_session({
-            "session_id": sid, "operator_pubkey": op.pubkey_hex, "operator_key_id": op.key_id,
-            "issued_at": now_z(), "expires_at": iso_z(now_utc() + datetime.timedelta(seconds=ttl)),
-            "max_tier": max_tier.value, "delegator_session": delegator_session,
-        })
-        self.vault.log("KERNEL", "SESSION_CREATED", session_id=sid[:12], operator=op.name, max_tier=max_tier.name)
+        self.db.create_session(
+            {
+                "session_id": sid,
+                "operator_pubkey": op.pubkey_hex,
+                "operator_key_id": op.key_id,
+                "issued_at": now_z(),
+                "expires_at": iso_z(now_utc() + datetime.timedelta(seconds=ttl)),
+                "max_tier": max_tier.value,
+                "delegator_session": delegator_session,
+            }
+        )
+        self.vault.log(
+            "KERNEL",
+            "SESSION_CREATED",
+            session_id=sid[:12],
+            operator=op.name,
+            max_tier=max_tier.name,
+        )
         self.telemetry.inc("sessions_created_total")
         return sid
 
@@ -1139,7 +1465,9 @@ class Governor:
         self.db.invalidate_session(session_id)
         self.vault.log("KERNEL", "SESSION_REVOKED", session_id=session_id[:12], cascaded=True)
 
-    def _validate_session(self, sid: str, pk: str, required_tier: ActionTier) -> Tuple[bool, Optional[RefusalReason], str]:
+    def _validate_session(
+        self, sid: str, pk: str, required_tier: ActionTier
+    ) -> tuple[bool, RefusalReason | None, str]:
         s = self.db.get_session(sid)
         if not s or not s["valid"]:
             return False, RefusalReason.SESSION_INVALID, "invalid"
@@ -1151,21 +1479,30 @@ class Governor:
             return False, RefusalReason.SESSION_EXPIRED, "expired"
         return True, None, "ok"
 
-    def _check_geofence(self, rec: OperatorRecord, region: str = None, lat: float = None, lon: float = None):
+    def _check_geofence(
+        self, rec: OperatorRecord, region: str = None, lat: float = None, lon: float = None
+    ):
         if rec.geo_constraint:
             ok, msg = rec.geo_constraint.check(region, lat, lon)
             if not ok:
                 self._refuse(RefusalTier.R1_POLICY, RefusalReason.GEOFENCE_VIOLATION, detail=msg)
-                raise GeofenceViolation(msg)
+                raise GeofenceViolationError(msg)
 
-    def _kernel_attestation_payload(self, hs: Handshake, outcome: str = "VALID") -> KernelAttestationPayload:
+    def _kernel_attestation_payload(
+        self, hs: Handshake, outcome: str = "VALID"
+    ) -> KernelAttestationPayload:
         return KernelAttestationPayload(
-            schema=SCHEMA_VERSION, alg=DEFAULT_ALGORITHM, kernel_key_id=hs.kernel_key_id,
-            operator_payload_hash=hs.operator_payload_hash, operator_sig=hs.operator_sig,
-            verification_outcome=outcome, received_at=hs.received_at, policy_version=self._policy_version,
+            schema=SCHEMA_VERSION,
+            alg=DEFAULT_ALGORITHM,
+            kernel_key_id=hs.kernel_key_id,
+            operator_payload_hash=hs.operator_payload_hash,
+            operator_sig=hs.operator_sig,
+            verification_outcome=outcome,
+            received_at=hs.received_at,
+            policy_version=self._policy_version,
         )
 
-    def _verify_operator_signature(self, hs: Handshake) -> Tuple[bool, Optional[RefusalReason]]:
+    def _verify_operator_signature(self, hs: Handshake) -> tuple[bool, RefusalReason | None]:
         rec = self._get_operator_record(hs.issuer_pubkey)
         if not rec:
             return False, RefusalReason.NOT_REGISTERED
@@ -1174,14 +1511,18 @@ class Governor:
         if not rec.can_authorize(hs.scope):
             return False, RefusalReason.SCOPE_NOT_ALLOWED
         try:
-            VerifyKey(bytes.fromhex(hs.issuer_pubkey)).verify(hs.operator_payload().to_bytes(), bytes.fromhex(hs.operator_sig))
+            VerifyKey(bytes.fromhex(hs.issuer_pubkey)).verify(
+                hs.operator_payload().to_bytes(), bytes.fromhex(hs.operator_sig)
+            )
             return True, None
         except Exception:
             return False, RefusalReason.OPERATOR_SIG_INVALID
 
-    def _verify_kernel_signature(self, hs: Handshake) -> Tuple[bool, Optional[RefusalReason]]:
+    def _verify_kernel_signature(self, hs: Handshake) -> tuple[bool, RefusalReason | None]:
         try:
-            self._km.verify_key.verify(self._kernel_attestation_payload(hs).to_bytes(), bytes.fromhex(hs.kernel_sig))
+            self._km.verify_key.verify(
+                self._kernel_attestation_payload(hs).to_bytes(), bytes.fromhex(hs.kernel_sig)
+            )
             return True, None
         except Exception:
             return False, RefusalReason.KERNEL_SIG_INVALID
@@ -1192,9 +1533,19 @@ class Governor:
             raise InsufficientAuthorityError("Replay detected")
         self.db.add_replay(scope.value, nonce)
 
-    def issue(self, op: OperatorIdentity, session_id: str, scope: ActionScope, nonce: str,
-              ttl_seconds: int = DEFAULT_HANDSHAKE_TTL_SECONDS, nonce_context: Dict[str, Any] = None,
-              region: str = None, lat: float = None, lon: float = None, model_ctx: ModelContext = None) -> Handshake:
+    def issue(
+        self,
+        op: OperatorIdentity,
+        session_id: str,
+        scope: ActionScope,
+        nonce: str,
+        ttl_seconds: int = DEFAULT_HANDSHAKE_TTL_SECONDS,
+        nonce_context: dict[str, Any] = None,
+        region: str = None,
+        lat: float = None,
+        lon: float = None,
+        model_ctx: ModelContext = None,
+    ) -> Handshake:
         self._check_operational(allow_sas_recovery=True, scope=scope)
         self._check_rate_limit(op.key_id)
 
@@ -1218,20 +1569,39 @@ class Governor:
                 self._refuse(RefusalTier.R2_AUTH, RefusalReason.MODEL_DRIFT_EXCEEDED)
                 raise OperatorNotAuthorizedError("Model drift exceeded")
             if model_ctx.tier == "experimental":
-                self._refuse(RefusalTier.R1_POLICY, RefusalReason.MODEL_DRIFT_EXCEEDED, note="experimental_blocked")
+                self._refuse(
+                    RefusalTier.R1_POLICY,
+                    RefusalReason.MODEL_DRIFT_EXCEEDED,
+                    note="experimental_blocked",
+                )
                 raise OperatorNotAuthorizedError("Experimental model tier blocked for T3/T4")
 
-        nonce_ctx_hash = hashlib.sha256(_json_canon(nonce_context).encode()).hexdigest()[:16] if nonce_context else None
+        nonce_ctx_hash = (
+            hashlib.sha256(_json_canon(nonce_context).encode()).hexdigest()[:16]
+            if nonce_context
+            else None
+        )
         model_fp = model_ctx.model_fingerprint_hash if model_ctx else None
 
         hs = Handshake(
-            token_id=secrets.token_hex(16), issuer_key_id=op.key_id, issuer_name=op.name,
-            issuer_pubkey=op.pubkey_hex, scope=scope, action_nonce=nonce,
-            nonce_context_hash=nonce_ctx_hash, issued_at=now_z(),
+            token_id=secrets.token_hex(16),
+            issuer_key_id=op.key_id,
+            issuer_name=op.name,
+            issuer_pubkey=op.pubkey_hex,
+            scope=scope,
+            action_nonce=nonce,
+            nonce_context_hash=nonce_ctx_hash,
+            issued_at=now_z(),
             expires_at=iso_z(now_utc() + datetime.timedelta(seconds=ttl_seconds)),
-            session_id=session_id, policy_version=self._policy_version,
-            model_fingerprint_hash=model_fp, operator_payload_hash="", operator_sig="",
-            kernel_key_id=self._km.key_id, kernel_sig="", received_at=now_z(), valid=True,
+            session_id=session_id,
+            policy_version=self._policy_version,
+            model_fingerprint_hash=model_fp,
+            operator_payload_hash="",
+            operator_sig="",
+            kernel_key_id=self._km.key_id,
+            kernel_sig="",
+            received_at=now_z(),
+            valid=True,
         )
 
         pb = hs.operator_payload().to_bytes()
@@ -1244,16 +1614,37 @@ class Governor:
         self.db.capsule(secrets.token_hex(8), "OPERATOR_PAYLOAD", hs.token_id, pb)
         self.db.capsule(secrets.token_hex(8), "KERNEL_ATTESTATION", hs.token_id, ab)
 
-        self.db.upsert_hs({
-            "tid": hs.token_id, "ikid": hs.issuer_key_id, "iname": hs.issuer_name, "ipk": hs.issuer_pubkey,
-            "scope": hs.scope.value, "nonce": hs.action_nonce, "nonce_ctx": nonce_ctx_hash,
-            "issued": hs.issued_at, "expires": hs.expires_at, "session_id": hs.session_id,
-            "policy_version": hs.policy_version, "model_fp": model_fp,
-            "ophash": hs.operator_payload_hash, "opsig": hs.operator_sig,
-            "kkey": hs.kernel_key_id, "ksig": hs.kernel_sig, "recv": hs.received_at, "valid": True,
-        })
+        self.db.upsert_hs(
+            {
+                "tid": hs.token_id,
+                "ikid": hs.issuer_key_id,
+                "iname": hs.issuer_name,
+                "ipk": hs.issuer_pubkey,
+                "scope": hs.scope.value,
+                "nonce": hs.action_nonce,
+                "nonce_ctx": nonce_ctx_hash,
+                "issued": hs.issued_at,
+                "expires": hs.expires_at,
+                "session_id": hs.session_id,
+                "policy_version": hs.policy_version,
+                "model_fp": model_fp,
+                "ophash": hs.operator_payload_hash,
+                "opsig": hs.operator_sig,
+                "kkey": hs.kernel_key_id,
+                "ksig": hs.kernel_sig,
+                "recv": hs.received_at,
+                "valid": True,
+            }
+        )
 
-        self.vault.log("GOVERNOR", "HANDSHAKE_ISSUED", token_id=hs.token_id[:12], issuer=hs.issuer_name, scope=scope.value, tier=tier.name)
+        self.vault.log(
+            "GOVERNOR",
+            "HANDSHAKE_ISSUED",
+            token_id=hs.token_id[:12],
+            issuer=hs.issuer_name,
+            scope=scope.value,
+            tier=tier.name,
+        )
         self.telemetry.inc("handshakes_issued_total", {"scope": scope.value, "tier": tier.name})
 
         if self.vault.should_seal():
@@ -1261,19 +1652,36 @@ class Governor:
 
         return hs
 
-    def require_handshake(self, scope: ActionScope, nonce: str, expected_context: Dict[str, Any] = None) -> Handshake:
+    def require_handshake(
+        self, scope: ActionScope, nonce: str, expected_context: dict[str, Any] = None
+    ) -> Handshake:
         self._check_operational()
-        expected_ctx_hash = hashlib.sha256(_json_canon(expected_context).encode()).hexdigest()[:16] if expected_context else None
+        expected_ctx_hash = (
+            hashlib.sha256(_json_canon(expected_context).encode()).hexdigest()[:16]
+            if expected_context
+            else None
+        )
 
         for r in self.db.find_hs(scope.value, nonce):
             hs = Handshake(
-                token_id=r["tid"], issuer_key_id=r["ikid"], issuer_name=r["iname"],
-                issuer_pubkey=r["ipk"], scope=ActionScope(r["scope"]), action_nonce=r["nonce"],
-                nonce_context_hash=r.get("nonce_ctx"), issued_at=r["issued"], expires_at=r["expires"],
-                session_id=r["session_id"], policy_version=r["policy_version"],
-                model_fingerprint_hash=r.get("model_fp"), operator_payload_hash=r["ophash"],
-                operator_sig=r["opsig"], kernel_key_id=r["kkey"], kernel_sig=r["ksig"],
-                received_at=r["recv"], valid=r["valid"],
+                token_id=r["tid"],
+                issuer_key_id=r["ikid"],
+                issuer_name=r["iname"],
+                issuer_pubkey=r["ipk"],
+                scope=ActionScope(r["scope"]),
+                action_nonce=r["nonce"],
+                nonce_context_hash=r.get("nonce_ctx"),
+                issued_at=r["issued"],
+                expires_at=r["expires"],
+                session_id=r["session_id"],
+                policy_version=r["policy_version"],
+                model_fingerprint_hash=r.get("model_fp"),
+                operator_payload_hash=r["ophash"],
+                operator_sig=r["opsig"],
+                kernel_key_id=r["kkey"],
+                kernel_sig=r["ksig"],
+                received_at=r["recv"],
+                valid=r["valid"],
             )
             if hs.is_expired():
                 continue
@@ -1287,27 +1695,40 @@ class Governor:
             if not ok_k:
                 continue
             self._consume_nonce(scope, nonce)
-            self.vault.log("GOVERNOR", "HANDSHAKE_VERIFIED", token_id=hs.token_id[:12], issuer=hs.issuer_name)
+            self.vault.log(
+                "GOVERNOR", "HANDSHAKE_VERIFIED", token_id=hs.token_id[:12], issuer=hs.issuer_name
+            )
             self.telemetry.inc("handshakes_verified_total", {"scope": scope.value})
             return hs
 
         self._refuse(RefusalTier.R2_AUTH, RefusalReason.NO_VALID_HANDSHAKE)
         raise InsufficientAuthorityError(f"No valid handshake for {scope.value}")
 
-    def require_dual_handshake(self, scope: ActionScope, nonce: str) -> Tuple[Handshake, Handshake]:
+    def require_dual_handshake(self, scope: ActionScope, nonce: str) -> tuple[Handshake, Handshake]:
         self._check_operational()
-        valid: List[Handshake] = []
-        keys_seen: Set[str] = set()
+        valid: list[Handshake] = []
+        keys_seen: set[str] = set()
 
         for r in self.db.find_hs(scope.value, nonce):
             hs = Handshake(
-                token_id=r["tid"], issuer_key_id=r["ikid"], issuer_name=r["iname"],
-                issuer_pubkey=r["ipk"], scope=ActionScope(r["scope"]), action_nonce=r["nonce"],
-                nonce_context_hash=r.get("nonce_ctx"), issued_at=r["issued"], expires_at=r["expires"],
-                session_id=r["session_id"], policy_version=r["policy_version"],
-                model_fingerprint_hash=r.get("model_fp"), operator_payload_hash=r["ophash"],
-                operator_sig=r["opsig"], kernel_key_id=r["kkey"], kernel_sig=r["ksig"],
-                received_at=r["recv"], valid=r["valid"],
+                token_id=r["tid"],
+                issuer_key_id=r["ikid"],
+                issuer_name=r["iname"],
+                issuer_pubkey=r["ipk"],
+                scope=ActionScope(r["scope"]),
+                action_nonce=r["nonce"],
+                nonce_context_hash=r.get("nonce_ctx"),
+                issued_at=r["issued"],
+                expires_at=r["expires"],
+                session_id=r["session_id"],
+                policy_version=r["policy_version"],
+                model_fingerprint_hash=r.get("model_fp"),
+                operator_payload_hash=r["ophash"],
+                operator_sig=r["opsig"],
+                kernel_key_id=r["kkey"],
+                kernel_sig=r["ksig"],
+                received_at=r["recv"],
+                valid=r["valid"],
             )
             if hs.issuer_pubkey in keys_seen or hs.is_expired():
                 continue
@@ -1327,79 +1748,126 @@ class Governor:
             raise InsufficientAuthorityError("T4 requires dual handshake")
 
         self._consume_nonce(scope, nonce)
-        self.vault.log("GOVERNOR", "DUAL_HANDSHAKE_VERIFIED", issuers=[valid[0].issuer_name, valid[1].issuer_name])
+        self.vault.log(
+            "GOVERNOR",
+            "DUAL_HANDSHAKE_VERIFIED",
+            issuers=[valid[0].issuer_name, valid[1].issuer_name],
+        )
         return valid[0], valid[1]
 
-    def governance_health(self) -> Dict[str, Any]:
+    def governance_health(self) -> dict[str, Any]:
         th = self.time.health()
         sas_active, sas_reason = self.db.get_sas()
         replay_count = self.db.replay_count()
         sat = int((replay_count / max(1, self.replay_window)) * 100)
         self.telemetry.set_gauge("replay_saturation_pct", sat)
         return {
-            "ok": self.db.integrity_check() and th.ok and not sas_active and self.vault.verify_chain(),
-            "kernel": {"key_id": self._km.key_id, "pubkey_hex": self._km.pubkey_hex, "schema": SCHEMA_VERSION, "policy": self._policy_version, "algorithm": DEFAULT_ALGORITHM},
+            "ok": self.db.integrity_check()
+            and th.ok
+            and not sas_active
+            and self.vault.verify_chain(),
+            "kernel": {
+                "key_id": self._km.key_id,
+                "pubkey_hex": self._km.pubkey_hex,
+                "schema": SCHEMA_VERSION,
+                "policy": self._policy_version,
+                "algorithm": DEFAULT_ALGORITHM,
+            },
             "sas": {"active": sas_active, "reason": sas_reason},
             "time": asdict(th),
-            "replay": {"count": replay_count, "capacity": self.replay_window, "saturation_pct": sat},
-            "audit": {"chain_ok": self.vault.verify_chain(), "seals": len(self.vault.export_seals())},
+            "replay": {
+                "count": replay_count,
+                "capacity": self.replay_window,
+                "saturation_pct": sat,
+            },
+            "audit": {
+                "chain_ok": self.vault.verify_chain(),
+                "seals": len(self.vault.export_seals()),
+            },
             "telemetry": self.telemetry.export_dict(),
         }
 
-    def export_attestation_bundle(self, token_id: str) -> Dict[str, Any]:
+    def export_attestation_bundle(self, token_id: str) -> dict[str, Any]:
         caps = self.db.list_capsules(token_id)
         return {
-            "id": token_id, "kernel_key_id": self._km.key_id, "kernel_pubkey_hex": self._km.pubkey_hex,
-            "policy_version": self._policy_version, "schema": SCHEMA_VERSION,
-            "capsules": caps, "vault_chain_ok": self.vault.verify_chain(),
+            "id": token_id,
+            "kernel_key_id": self._km.key_id,
+            "kernel_pubkey_hex": self._km.pubkey_hex,
+            "policy_version": self._policy_version,
+            "schema": SCHEMA_VERSION,
+            "capsules": caps,
+            "vault_chain_ok": self.vault.verify_chain(),
             "seals": self.vault.export_seals()[-3:],
         }
 
-    def list_operators(self) -> List[Dict[str, Any]]:
+    def list_operators(self) -> list[dict[str, Any]]:
         return self.db.list_ops()
 
-    def policy_history(self) -> List[Dict[str, Any]]:
+    def policy_history(self) -> list[dict[str, Any]]:
         return self.db.get_policy_history()
 
-    def list_seals(self) -> List[Dict[str, Any]]:
+    def list_seals(self) -> list[dict[str, Any]]:
         return self.vault.export_seals()
 
-    def remote_attestation_bundle(self) -> Dict[str, Any]:
+    def remote_attestation_bundle(self) -> dict[str, Any]:
         health = self.governance_health()
         payload = {
-            "schema": SCHEMA_VERSION, "kind": "REMOTE_ATTESTATION", "issued_at": now_z(),
-            "kernel": health["kernel"], "sas": health["sas"], "time": health["time"],
-            "replay": health["replay"], "audit": health["audit"],
+            "schema": SCHEMA_VERSION,
+            "kind": "REMOTE_ATTESTATION",
+            "issued_at": now_z(),
+            "kernel": health["kernel"],
+            "sas": health["sas"],
+            "time": health["time"],
+            "replay": health["replay"],
+            "audit": health["audit"],
         }
         b = _json_canon(payload).encode()
         sig = self._km.sign_hex(b)
         return {"payload": payload, "kernel_sig": sig}
 
-    def replay_decisions(self, scope: ActionScope, nonce: str) -> List[Dict[str, Any]]:
+    def replay_decisions(self, scope: ActionScope, nonce: str) -> list[dict[str, Any]]:
         return self.db.get_decisions(scope.value, nonce)
 
-    def _persist_decision(self, scope: ActionScope, nonce: str, outcome: str, envelope: Dict[str, Any]):
+    def _persist_decision(
+        self, scope: ActionScope, nonce: str, outcome: str, envelope: dict[str, Any]
+    ):
         did = secrets.token_hex(16)
         self.db.add_decision(did, scope.value, nonce, outcome, envelope)
 
     def close(self):
         self.db.close()
 
+
 # =============================================================================
 # MGI — Governance Envelope v2.0
 # =============================================================================
+
 
 class MGI:
     def __init__(self, gov: Governor):
         self.gov = gov
 
-    def authorize(self, scope: ActionScope, nonce: str, required_tier: Optional[ActionTier] = None,
-                  expected_context: Optional[Dict[str, Any]] = None, model_ctx: Optional[ModelContext] = None,
-                  t4_requires_dual: bool = True) -> Dict[str, Any]:
+    def authorize(
+        self,
+        scope: ActionScope,
+        nonce: str,
+        required_tier: ActionTier | None = None,
+        expected_context: dict[str, Any] | None = None,
+        model_ctx: ModelContext | None = None,
+        t4_requires_dual: bool = True,
+    ) -> dict[str, Any]:
         decided_at = now_z()
         tier = SCOPE_TIER_MAP[scope]
         if required_tier and tier.value < required_tier.value:
-            env = self._deny(scope, nonce, decided_at, tier, RefusalTier.R1_POLICY, RefusalReason.SCOPE_NOT_ALLOWED, note="required_tier_exceeds_scope_tier")
+            env = self._deny(
+                scope,
+                nonce,
+                decided_at,
+                tier,
+                RefusalTier.R1_POLICY,
+                RefusalReason.SCOPE_NOT_ALLOWED,
+                note="required_tier_exceeds_scope_tier",
+            )
             self.gov._persist_decision(scope, nonce, "DENY", env)
             return env
 
@@ -1434,11 +1902,18 @@ class MGI:
 
             health = self.gov.governance_health()
             env = {
-                "schema": SCHEMA_VERSION, "kind": "GOVERNANCE_ENVELOPE_V2",
-                "decided_at": decided_at, "outcome": "ALLOW", "scope": scope.value,
-                "tier": tier.name, "nonce": nonce, "issuers": issuers, "health": health,
+                "schema": SCHEMA_VERSION,
+                "kind": "GOVERNANCE_ENVELOPE_V2",
+                "decided_at": decided_at,
+                "outcome": "ALLOW",
+                "scope": scope.value,
+                "tier": tier.name,
+                "nonce": nonce,
+                "issuers": issuers,
+                "health": health,
                 "model_context": asdict(model_ctx) if model_ctx else None,
-                "evidence": evidence, "refusal": None,
+                "evidence": evidence,
+                "refusal": None,
             }
             payload_bytes = _json_canon(env).encode()
             env["decision_sig"] = self.gov._km.sign_hex(payload_bytes)
@@ -1446,25 +1921,71 @@ class MGI:
             return env
 
         except SASActiveError:
-            env = self._deny(scope, nonce, decided_at, tier, RefusalTier.R3_SAS, RefusalReason.SAS_ACTIVE, model_ctx=model_ctx)
+            env = self._deny(
+                scope,
+                nonce,
+                decided_at,
+                tier,
+                RefusalTier.R3_SAS,
+                RefusalReason.SAS_ACTIVE,
+                model_ctx=model_ctx,
+            )
         except IntegrityError:
-            env = self._deny(scope, nonce, decided_at, tier, RefusalTier.R4_INTEGRITY, RefusalReason.DB_ERROR, model_ctx=model_ctx)
-        except GeofenceViolation:
-            env = self._deny(scope, nonce, decided_at, tier, RefusalTier.R1_POLICY, RefusalReason.GEOFENCE_VIOLATION, model_ctx=model_ctx)
+            env = self._deny(
+                scope,
+                nonce,
+                decided_at,
+                tier,
+                RefusalTier.R4_INTEGRITY,
+                RefusalReason.DB_ERROR,
+                model_ctx=model_ctx,
+            )
+        except GeofenceViolationError:
+            env = self._deny(
+                scope,
+                nonce,
+                decided_at,
+                tier,
+                RefusalTier.R1_POLICY,
+                RefusalReason.GEOFENCE_VIOLATION,
+                model_ctx=model_ctx,
+            )
         except Exception:
-            env = self._deny(scope, nonce, decided_at, tier, RefusalTier.R5_UNKNOWN, RefusalReason.NO_VALID_HANDSHAKE, model_ctx=model_ctx)
+            env = self._deny(
+                scope,
+                nonce,
+                decided_at,
+                tier,
+                RefusalTier.R5_UNKNOWN,
+                RefusalReason.NO_VALID_HANDSHAKE,
+                model_ctx=model_ctx,
+            )
 
         self.gov._persist_decision(scope, nonce, "DENY", env)
         return env
 
-    def _deny(self, scope: ActionScope, nonce: str, decided_at: str, tier: ActionTier,
-              refusal_tier: RefusalTier, refusal_reason: RefusalReason, note: str = None,
-              model_ctx: ModelContext = None) -> Dict[str, Any]:
+    def _deny(
+        self,
+        scope: ActionScope,
+        nonce: str,
+        decided_at: str,
+        tier: ActionTier,
+        refusal_tier: RefusalTier,
+        refusal_reason: RefusalReason,
+        note: str = None,
+        model_ctx: ModelContext = None,
+    ) -> dict[str, Any]:
         health = self.gov.governance_health()
         env = {
-            "schema": SCHEMA_VERSION, "kind": "GOVERNANCE_ENVELOPE_V2",
-            "decided_at": decided_at, "outcome": "DENY", "scope": scope.value,
-            "tier": tier.name, "nonce": nonce, "issuers": [], "health": health,
+            "schema": SCHEMA_VERSION,
+            "kind": "GOVERNANCE_ENVELOPE_V2",
+            "decided_at": decided_at,
+            "outcome": "DENY",
+            "scope": scope.value,
+            "tier": tier.name,
+            "nonce": nonce,
+            "issuers": [],
+            "health": health,
             "model_context": asdict(model_ctx) if model_ctx else None,
             "evidence": {"handshakes": []},
             "refusal": {"tier": refusal_tier.value, "reason": refusal_reason.value, "note": note},

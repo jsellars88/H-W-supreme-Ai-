@@ -13,7 +13,7 @@ import threading
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 try:
     from nacl.encoding import HexEncoder
@@ -55,14 +55,14 @@ class KeyRecord:
     key_id: str
     pubkey_hex: str
     created_at: str
-    retired_at: Optional[str] = None
+    retired_at: str | None = None
     notes: str = ""
 
 
 class KeyCustody:
     """Loads or generates signing keys with strict file permissions."""
 
-    def __init__(self, key_path: Optional[str] = None):
+    def __init__(self, key_path: str | None = None):
         self._sk: SigningKey
         self._key_id: str
         self._pubkey_hex: str
@@ -138,7 +138,7 @@ def canonical_json(obj: Any) -> bytes:
     return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
 
-def record_canonical_fields(r: DecisionRecord) -> Dict[str, Any]:
+def record_canonical_fields(r: DecisionRecord) -> dict[str, Any]:
     """Fields included in the signed payload (everything except `signature`)."""
 
     return {
@@ -164,8 +164,8 @@ class DecisionLedger:
     def __init__(
         self,
         db_path: str = "decisions.db",
-        key_path: Optional[str] = None,
-        key_custody: Optional[KeyCustody] = None,
+        key_path: str | None = None,
+        key_custody: KeyCustody | None = None,
     ):
         self._owner_thread_id = threading.get_ident()
         self._custody = key_custody or KeyCustody(key_path)
@@ -256,7 +256,7 @@ class DecisionLedger:
                 "This ledger is single-writer by design. Use LedgerWriter.submit()."
             )
 
-    def _get_chain_head(self) -> Tuple[str, int]:
+    def _get_chain_head(self) -> tuple[str, int]:
         actual_count = self.db.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
         last_row = self.db.execute(
             "SELECT record_hash FROM decisions ORDER BY seq DESC LIMIT 1"
@@ -285,7 +285,7 @@ class DecisionLedger:
 
     def record(
         self,
-        decision_input: Dict[str, Any],
+        decision_input: dict[str, Any],
         model_version: str,
         model_fingerprint: str,
         policy_version: str,
@@ -360,7 +360,7 @@ class DecisionLedger:
             self.db.rollback()
             raise RuntimeError(f"DecisionLedger.record() failed: {e}") from e
 
-    def verify_chain(self) -> Dict[str, Any]:
+    def verify_chain(self) -> dict[str, Any]:
         rows = self.db.execute(
             "SELECT seq, decision_id, key_id, input_hash, model_version, "
             "model_fingerprint, policy_version, operator_id, risk_tier, "
@@ -371,9 +371,7 @@ class DecisionLedger:
         if not rows:
             return {"valid": True, "record_count": 0, "message": "empty chain"}
 
-        head = self.db.execute(
-            "SELECT record_count FROM chain_head WHERE id=1"
-        ).fetchone()
+        head = self.db.execute("SELECT record_count FROM chain_head WHERE id=1").fetchone()
         if head and int(head[0]) != len(rows):
             return {
                 "valid": False,
@@ -430,7 +428,7 @@ class DecisionLedger:
             "key_ids_seen": list({r[2] for r in rows}),
         }
 
-    def export_proof(self, decision_id: str) -> Dict[str, Any]:
+    def export_proof(self, decision_id: str) -> dict[str, Any]:
         row = self.db.execute(
             "SELECT seq, decision_id, key_id, input_hash, model_version, "
             "model_fingerprint, policy_version, operator_id, risk_tier, "
@@ -489,7 +487,7 @@ class DecisionLedger:
             ),
         }
 
-    def list_keys(self) -> List[Dict[str, Any]]:
+    def list_keys(self) -> list[dict[str, Any]]:
         rows = self.db.execute(
             "SELECT key_id, pubkey_hex, created_at, retired_at, notes "
             "FROM key_registry ORDER BY created_at ASC"

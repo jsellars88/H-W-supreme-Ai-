@@ -8,7 +8,7 @@ import base64
 import hashlib
 import json
 import sys
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 try:
     from nacl.exceptions import BadSignatureError
@@ -39,11 +39,11 @@ CANONICAL_FIELDS = [
 ]
 
 
-def extract_canonical(record: Dict[str, Any]) -> bytes:
+def extract_canonical(record: dict[str, Any]) -> bytes:
     return canonical_json({k: record[k] for k in CANONICAL_FIELDS if k in record})
 
 
-def check_hash(record: Dict[str, Any]) -> Tuple[bool, str]:
+def check_hash(record: dict[str, Any]) -> tuple[bool, str]:
     signed_payload = extract_canonical(record)
     computed_hash = hashlib.sha256(signed_payload).hexdigest()
     stored_hash = record.get("record_hash", "")
@@ -52,7 +52,7 @@ def check_hash(record: Dict[str, Any]) -> Tuple[bool, str]:
     return False, f"hash MISMATCH\n  computed: {computed_hash}\n  stored:   {stored_hash}"
 
 
-def check_signature(record: Dict[str, Any], pubkey_hex: str) -> Tuple[bool, str]:
+def check_signature(record: dict[str, Any], pubkey_hex: str) -> tuple[bool, str]:
     signed_payload = extract_canonical(record)
     sig_hex = record.get("signature", "")
     key_id = record.get("key_id", "unknown")
@@ -68,8 +68,8 @@ def check_signature(record: Dict[str, Any], pubkey_hex: str) -> Tuple[bool, str]
 
 
 def check_predecessor(
-    record: Dict[str, Any], predecessor: Optional[Dict[str, Any]]
-) -> Tuple[bool, str]:
+    record: dict[str, Any], predecessor: dict[str, Any] | None
+) -> tuple[bool, str]:
     prev_hash = record.get("prev_hash", "")
     if predecessor:
         expected = predecessor.get("record_hash", "")
@@ -90,9 +90,7 @@ def check_predecessor(
     return False, f"prev_hash malformed or missing: {prev_hash!r}"
 
 
-def check_rekor(
-    record: Dict[str, Any], rekor_receipt: Optional[Dict[str, Any]], pubkey_hex: str
-):
+def check_rekor(record: dict[str, Any], rekor_receipt: dict[str, Any] | None, pubkey_hex: str):
     del pubkey_hex
     if not rekor_receipt:
         return None, "no Rekor receipt in packet (anchoring may not have been enabled)"
@@ -147,7 +145,7 @@ def check_rekor(
 def verify(
     packet_path: str,
     pubkey_hex: str,
-    predecessor_path: Optional[str] = None,
+    predecessor_path: str | None = None,
     check_rekor_flag: bool = False,
     quiet: bool = False,
 ) -> bool:
@@ -198,9 +196,7 @@ def main():
     parser = argparse.ArgumentParser(description="Verify a WhiteSwan evidence packet.")
     parser.add_argument("packet", help="Path to evidence packet JSON")
     parser.add_argument("--pubkey", required=True, help="Ed25519 public key hex")
-    parser.add_argument(
-        "--predecessor", help="Path to predecessor evidence packet JSON (optional)"
-    )
+    parser.add_argument("--predecessor", help="Path to predecessor evidence packet JSON (optional)")
     parser.add_argument("--rekor", action="store_true", help="Confirm Rekor inclusion")
     parser.add_argument("--quiet", action="store_true", help="Suppress output")
     args = parser.parse_args()
