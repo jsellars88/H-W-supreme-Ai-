@@ -1,101 +1,126 @@
-# WhiteSwan Governance Kernel
+# White Swan OS — Cornerstone v2.0
 
-Constitutional AI governance middleware for regulated environments.
+**Control-Grade Governance Reference Implementation**  
+Holmes & Watson Supreme AI™
 
-WhiteSwan sits between your application and any model provider (OpenAI, Anthropic, Google, xAI, etc.) and enforces runtime governance with tamper-evident evidence capture.
+-----
 
-## Why this repository exists
+## What This Is
 
-This project is **not** an AI model and **not** a content-card demo app. It is a governance middleware stack built to answer:
+A reference implementation demonstrating one invariant:
 
-- What decision did the AI make?
-- Which governance constraints were enforced?
-- Can an external auditor verify that record independently?
+> **No high-tier action executes without valid human authority. Evidence is written before the action runs.**
 
-The kernel is designed for AI assurance, incident response, and regulator-facing evidence workflows.
+This is a working prototype — not a production system. It does exactly what it claims and nothing more.
 
-## Core components (already in repo)
+-----
 
-- Governance kernel v3.4: [`whiteswan/whiteswan_governance_kernel_v3_4.py`](whiteswan/whiteswan_governance_kernel_v3_4.py)
-- Governance kernel v3.5: [`whiteswan/kernel_v35.py`](whiteswan/kernel_v35.py)
-- API layer: [`whiteswan/whiteswan_api_v35.py`](whiteswan/whiteswan_api_v35.py)
-- Integration tests: [`tests/integration_test_v35.py`](tests/integration_test_v35.py)
+## What This Demonstrates
 
-Supporting verification and ledger tooling:
+| Property                                     | Status |
+|----------------------------------------------|--------|
+| T0/T1 actions pass without token             | ✅     |
+| T2/T3/T4 blocked without valid token         | ✅     |
+| T4 requires two distinct operators           | ✅     |
+| Ed25519 signatures verified on every consume | ✅     |
+| Keys persist across restarts                 | ✅     |
+| Atomic single-use token consumption          | ✅     |
+| Ledger entry written before execution        | ✅     |
+| Hash-chain tamper detection                  | ✅     |
+| Handshake record tampering detected          | ✅     |
+| All 9 adversarial tests passing              | ✅     |
 
-- Evidence verifier: [`verify_evidence.py`](verify_evidence.py)
-- Rekor anchoring utility: [`rekor_anchor.py`](rekor_anchor.py)
-- Ledger writers: [`ledger_writer.py`](ledger_writer.py), [`decision_ledger.py`](decision_ledger.py)
+## What This Is Not
 
-## Architecture at a glance
+- Not production-ready
+- Not audited
+- Not scalable beyond single-instance SQLite
+- Not a bearer-token system (tokens are DB-backed approval records, not self-contained JWTs)
 
-```text
-Application / Orchestrator
-          |
-          v
-+-----------------------------------------------+
-| WhiteSwan Governance Kernel                   |
-| - Constitutional invariant enforcement         |
-| - Refusal/escalation path on policy breach    |
-| - Evidence packet generation                  |
-| - Ed25519 signatures + hash-chained records   |
-+-----------------------------------------------+
-          |
-          v
-Provider Model API (LLM of choice)
-```
+**Honest framing:** Approval records are Ed25519-signed and persisted. Execution consumes a server-validated authority record. Signature is re-verified at consume time from the stored payload.
 
-Evidence can be independently validated offline and optionally anchored to Rekor for third-party timestamp transparency.
+-----
 
-## Repository structure (governance-focused)
-
-```text
-whiteswan/
-  whiteswan_governance_kernel_v3_4.py
-  kernel_v35.py
-  whiteswan_api_v35.py
-
-tests/
-  integration_test_v35.py
-  test_whiteswan_governance_kernel.py
-  test_rekor_anchor.py
-
-.github/workflows/
-  ... CI validation workflows
-```
-
-## Run locally
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
-python whiteswan/whiteswan_api_v35.py
+python cornerstone.py
 ```
 
-## Validate locally
+Test TTL override for fast testing:
 
 ```bash
-pytest tests/
+HANDSHAKE_TTL=2 python cornerstone.py
 ```
 
-## Evidence verification examples
+-----
+
+## Adversarial Tests
 
 ```bash
-python verify_evidence.py packet.json --pubkey <hex_pubkey>
-python verify_evidence.py packet.json --pubkey <hex_pubkey> --predecessor prev.json
-python verify_evidence.py packet.json --pubkey <hex_pubkey> --rekor
+python adversarial_test.py
 ```
 
-## Current test posture
+Runs 9 tests against a live server instance:
 
-The governance test suite lives in [`tests/`](tests/), including kernel and integration coverage:
+1. Replay attack — token reuse
+2. Token expiry — time-limited enforcement
+3. Tier escalation — T2 token for T3 action
+4. Ledger tampering — direct DB edit detected
+5. Race condition — 10 concurrent requests, 1 token
+6. T4 multi-party — requires 2 distinct operators
+7. Signature verification — external verify with public key
+8. Handshake tampering — edited DB record rejected
+9. Restart persistence — keys and state survive restart
 
-- [`tests/test_whiteswan_governance_kernel.py`](tests/test_whiteswan_governance_kernel.py)
-- [`tests/integration_test_v35.py`](tests/integration_test_v35.py)
-- [`tests/test_rekor_anchor.py`](tests/test_rekor_anchor.py)
+-----
 
-Use CI workflows in [`.github/workflows/`](.github/workflows/) plus local `pytest tests/` runs as evaluation entry points.
+## API
 
-## Positioning statement
+| Method | Endpoint              | Description                          |
+|--------|-----------------------|--------------------------------------|
+| POST   | `/action`             | Execute a governed action            |
+| POST   | `/handshake`          | Issue authority token                |
+| GET    | `/ledger`             | Evidence chain                       |
+| GET    | `/ledger/verify`      | Chain integrity                      |
+| GET    | `/ledger/record/{id}` | Single record with full signature    |
+| GET    | `/pubkey/handshake`   | Public key for external verification |
+| GET    | `/pubkey/ledger`      | Ledger public key                    |
+| GET    | `/health`             | System status                        |
 
-WhiteSwan is governance middleware: enforce constraints, capture signed evidence, and make AI decisions audit-verifiable across model providers.
+-----
 
+## Architecture Decisions
+
+**Why DB-backed approval records, not bearer tokens?**  
+Easier revocation, stronger server-side authority enforcement, no token leakage risk. Verification is always server-authoritative.
+
+**Why SQLite?**  
+Simplicity. This is a reference implementation. Production would use PostgreSQL with explicit row-locking (`SELECT FOR UPDATE`).
+
+**Why not RETURNING clause?**  
+SQLite 3.35+ supports it, but the atomic consume here uses `UPDATE rowcount check` which works on any SQLite version and is simpler to reason about.
+
+**Why Ed25519 over HMAC?**  
+Asymmetric. Public key can be distributed to external verifiers. Ledger records and handshake records are independently verifiable by anyone with the public key.
+
+-----
+
+## File Layout
+
+```text
+cornerstone.py         # server + governance kernel + ledger
+adversarial_test.py    # 9-test adversarial suite
+requirements.txt       # dependencies
+README.md              # this file
+handshake_private.key  # generated on first run
+handshake_public.key   # distribute to external verifiers
+ledger_private.key     # generated on first run
+ledger_public.key      # distribute to external verifiers
+cornerstone.db         # SQLite evidence store
+```
+
+-----
+
+© 2026 Holmes & Watson Supreme AI™ — Proprietary

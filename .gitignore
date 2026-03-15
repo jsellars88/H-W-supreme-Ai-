@@ -5,3 +5,5 @@ __pycache__/
 .whiteswan_kernel_key
 *.db
 .pytest_cache/
+
+node_modules/
