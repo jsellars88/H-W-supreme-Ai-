@@ -1,0 +1,365 @@
+{
+  "registry": "WhiteSwan Canonical Constitutional Registry",
+  "registry_version": "1.3",
+  "namespace": "WOS-REG-1.3",
+  "adopted": "2026-07-03",
+  "authority": "This registry is the machine-readable index of canonical constitutional authority. Where implementation, legacy documents, or derivative materials conflict with this registry, the registry controls. Where this registry conflicts with WOS-CONST-3.5, WOS-CONST-3.5 controls.",
+  "supreme_authority": "WOS-CONST-3.5",
+  "registry_role": "Machine-readable canonical index, not constitutional amendment authority",
+  "registry_controls": "Derivative documents, implementation labels, evidence mappings, and legacy references",
+  "registry_uuid": "urn:whiteswan:registry:constitutional:1.3",
+  "schema_version": "1.0",
+  "compatibility": {
+    "minimum_constitution": "3.5",
+    "minimum_guardians": "6.2",
+    "minimum_planes": "3.0"
+  },
+  "citation_format": "WOS-REG-1.2 <section.path>, e.g. WOS-REG-1.2 reference_implementations.kernel",
+  "registry_sha256": "fea47125a701c14a29ee0110709dab031a38f91ca0f20b4a8dbe137933d60a8d",
+  "registry_sha256_method": "SHA-256 over json.dumps(registry, sort_keys=True, separators=(',',':'), ensure_ascii=True) with registry_sha256 field excluded",
+  "canonical_documents": {
+    "SOVEREIGN-PLANES-3.0": {
+      "title": "The Eight Sovereign Planes",
+      "status": "CANONICAL",
+      "role": "Permanent constitutional domain definitions"
+    },
+    "WOS-STATE-1.1": {
+      "title": "Current State of the Sovereign Planes",
+      "status": "CANONICAL-COMPANION",
+      "role": "Maturity classifications; changes frequently",
+      "note": "v1.2 pending: Plane I and Plane IV promotions from RescueChain / transition-conductor reproduction session"
+    },
+    "GUARDIANS-6.2": {
+      "title": "Guardians of the Kernel",
+      "status": "CANONICAL",
+      "role": "Meta-governance: Guardian Council, Kernel Change Protocol"
+    },
+    "WOS-CONST-3.5": {
+      "title": "Constitutional Development Directive",
+      "status": "CANONICAL",
+      "role": "Supreme constitutional authority: rules, lifecycle, claim discipline, invariants, objectives, conformance standard, amendment procedure. Status: Constitutionally Frozen."
+    }
+  },
+  "deprecated_lineages": {
+    "effect": "Historical record only. Must carry deprecation notices if publicly accessible (WOS-CONST-3.1 Rule 6).",
+    "items": [
+      {
+        "lineage": "WOS-BP-5.x through WOS-BP-6.3 blueprints",
+        "reason": "Plane taxonomy superseded by Amendment 3.0"
+      },
+      {
+        "lineage": "5-plane / 18-invariant transitional materials (2026.1 Ecosystem Blueprint)",
+        "reason": "Superseded branch"
+      },
+      {
+        "lineage": "9-plane (v5.6) and 10-plane (v5.7) variants",
+        "reason": "Superseded branches; violate Constitutional Allocation Rule retroactively"
+      },
+      {
+        "lineage": "2025 investor whitepapers / Series A claims (valuation, ARR, pilot counts, user counts)",
+        "reason": "Legacy marketing narrative; no current evidentiary basis; violates Claim Discipline if presented as current"
+      },
+      {
+        "lineage": "Master Module Index v4.1 (239 modules) and all module-count-led positioning",
+        "reason": "Violates External Communication Standard"
+      }
+    ]
+  },
+  "sovereign_planes": {
+    "taxonomy_authority": "Amendment 3.0 -- Sovereign Plane Canonicalization",
+    "note": "Planes are constitutionally Stable by definition. Implementation status per WOS-STATE (v1.1 shown; v1.2 promotions flagged).",
+    "planes": [
+      {
+        "id": "I",
+        "name": "Constitutional Intelligence",
+        "implementation_status": "IN_DEVELOPMENT",
+        "status_note": "Promoted from Aspirational: multi-conductor decision generation (art_command, rescuechain) implemented, executed, deterministically reproduced 2026-07-03"
+      },
+      {
+        "id": "II",
+        "name": "Knowledge & Reality",
+        "implementation_status": "IN_DEVELOPMENT"
+      },
+      {
+        "id": "III",
+        "name": "Governance & Authority",
+        "implementation_status": "VALIDATED"
+      },
+      {
+        "id": "IV",
+        "name": "Physical Systems & Infrastructure",
+        "implementation_status": "IN_DEVELOPMENT",
+        "status_note": "Simulation responsibility only -- transition_conductor 60-trial Monte Carlo, 0 crashes, reproduced. Hardware remains Aspirational."
+      },
+      {
+        "id": "V",
+        "name": "Verification & Truth",
+        "implementation_status": "IN_DEVELOPMENT",
+        "status_note": "Promotion blocked on: benchmarked verification accuracy + measured verifier independence"
+      },
+      {
+        "id": "VI",
+        "name": "Human Factors & Stability",
+        "implementation_status": "IN_DEVELOPMENT"
+      },
+      {
+        "id": "VII",
+        "name": "Refusal & Restraint",
+        "implementation_status": "VALIDATED"
+      },
+      {
+        "id": "VIII",
+        "name": "Audit & Constitutional Continuity",
+        "implementation_status": "VALIDATED"
+      }
+    ],
+    "evidence_boundary_rule": "Plane II owns knowledge provenance (what the system knows and where it came from). Plane VIII owns decision provenance (what the system did and who authorized it). WOS-CONST-3.1 Rule 4."
+  },
+  "invariant_registry": {
+    "authority_ruling": "Invariant 23 is Meta-Governance Completeness per Guardians of the Kernel. Flow-Preserving Governance is a design heuristic, NOT an invariant -- its own addendum states it modifies no invariants. This ruling resolves the corpus's principal numbering conflict.",
+    "enforcement_legend": {
+      "ENFORCED": "Runtime-enforced in the reference kernel with passing tests",
+      "PARTIAL": "Partially implemented in runnable code",
+      "SPEC_ONLY": "Specification exists; no runtime enforcement located"
+    },
+    "invariants": [
+      {
+        "n": 1,
+        "name": "Maintainability Threshold",
+        "group": "Foundation",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 2,
+        "name": "Evidence-Claim Binding",
+        "group": "Foundation",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 3,
+        "name": "Authority Restoration",
+        "group": "Foundation",
+        "enforcement": "ENFORCED"
+      },
+      {
+        "n": 4,
+        "name": "Intent-Outcome Decoupling",
+        "group": "Foundation",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 5,
+        "name": "Reward/Incentive Separation",
+        "group": "Foundation",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 6,
+        "name": "Cross-Modal Verification",
+        "group": "Foundation",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 7,
+        "name": "Cognitive Preservation",
+        "group": "Foundation",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 8,
+        "name": "Recursive Governance",
+        "group": "Governance",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 9,
+        "name": "Model Identity",
+        "group": "Governance",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 10,
+        "name": "Agent Accountability",
+        "group": "Governance",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 11,
+        "name": "Pressure != Authority",
+        "group": "Governance",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 12,
+        "name": "Contamination Control",
+        "group": "Governance",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 13,
+        "name": "Simple Task Sentinel",
+        "group": "Governance",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 14,
+        "name": "Human Reliability Tracking",
+        "group": "Operational",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 15,
+        "name": "Governance Drift Sentinel",
+        "group": "Operational",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 16,
+        "name": "Override Accountability",
+        "group": "Operational",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 17,
+        "name": "Successor Authority",
+        "group": "Operational",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 18,
+        "name": "Cumulative Harm Score",
+        "group": "Operational",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 19,
+        "name": "Model Behavior Stability",
+        "group": "Infrastructure",
+        "enforcement": "SPEC_ONLY"
+      },
+      {
+        "n": 20,
+        "name": "Evidence Materiality",
+        "group": "Infrastructure",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 21,
+        "name": "Temporal Verification Redundancy",
+        "group": "Infrastructure",
+        "enforcement": "PARTIAL"
+      },
+      {
+        "n": 22,
+        "name": "Replay & Session Integrity",
+        "group": "Infrastructure",
+        "enforcement": "ENFORCED"
+      },
+      {
+        "n": 23,
+        "name": "Meta-Governance Completeness",
+        "group": "Meta",
+        "enforcement": "PARTIAL",
+        "note": "Guardian Council + KCP defined (GUARDIANS-6.2); shared runtime validator incomplete"
+      }
+    ],
+    "registry_note": "Exact per-invariant numbering below n=23 varies across deprecated documents; this registry's numbering is now canonical. Enforcement labels must be revalidated against WOS-KERNEL-3.4 test output before external publication -- treat labels here as best current assessment, not benchmark evidence."
+  },
+  "reference_implementations": {
+    "kernel": {
+      "canonical_branch": "WOS-KERNEL-3.4",
+      "file": "kernel_v34.py / whiteswan_kernel_v3_4.py",
+      "status": "Reference implementation. v3.5 (app_v35.py, test_v35.py, 70 integration tests) is the integration branch.",
+      "rule": "All other kernel files (v1.1 through v3.3, cornerstone variants) are historical branches."
+    },
+    "ledger_families": {
+      "ruling": "Two distinct ledger primitives exist and must never be conflated in claims.",
+      "enterprise": {
+        "file": "decision_ledger.py",
+        "model": "Per-record Ed25519 signatures + prev_hash chain + single-writer enforcement",
+        "properties": "Non-repudiation at record level; strongest evidence primitive",
+        "benchmark": "stress_report.json -- 10,000 writes, chain_valid true, 0 errors, ~1253.8 writes/sec (internal, single run)"
+      },
+      "forensic_demo": {
+        "file": "governance_ledger.py",
+        "model": "SHA-256 hash chain + Ed25519 signature over chain head",
+        "properties": "Tamper-evident and independently verifiable; chain-head (not per-record) non-repudiation",
+        "reproduction": "art_mission_ledger.json and omni_scout_decision_ledger.json deterministically regenerated in clean environment 2026-07-03; verified by from-scratch third-party verifier (independent_verify.py)"
+      }
+    }
+  },
+  "evidence_maturity": {
+    "scale": {
+      "E0": "Concept or specification only",
+      "E1": "Simulation or scenario demo",
+      "E2": "Internal implementation + internal test/benchmark evidence",
+      "E2.5": "Reproduced from artifacts in clean environment without author assistance (AI-executed; not arms-length human)",
+      "E3": "Independent third-party (human, arms-length) reproduction",
+      "E4": "Pilot deployment evidence",
+      "E5": "Production evidence"
+    },
+    "current_ceiling": "E2.5",
+    "ceiling_holders": [
+      "governance_ledger.py + art_command.py (tornado scenario): deterministic reproduction, matching sensor hashes and chain heads",
+      "transition_conductor.py: 60-trial Monte Carlo reproduced -- 25 complete / 35 typed safe refusals / 0 crashes; chain head match"
+    ],
+    "path_to_E3": "Human third party (candidate: Bob Ladrach) runs: (1) python3 art_command.py, (2) python3 rescuechain.py, (3) python3 independent_verify.py <ledgers> -- from repo artifacts only, no founder assistance."
+  },
+  "open_findings": [
+    {
+      "id": "F-1",
+      "finding": "Medic vote field conflates veto authority with veto exercise ('veto': true on authorizations)",
+      "classification": "Implementation Improvement (Plane VIII audit semantics)",
+      "fix": "Split into veto_authority (unit property) and veto_exercised (per-decision)"
+    },
+    {
+      "id": "F-2",
+      "finding": "Enforcement labels in invariant registry not yet revalidated against WOS-KERNEL-3.4 test output",
+      "classification": "Validation Task"
+    },
+    {
+      "id": "F-3",
+      "finding": "Formal tests archive did not reproduce cleanly in external environment (missing pynacl)",
+      "classification": "Documentation Improvement -- pin dependencies, one-command runner"
+    },
+    {
+      "id": "F-4",
+      "finding": "verify_evidence 2.py filename contains a space",
+      "classification": "Implementation Improvement -- rename verify_evidence.py"
+    },
+    {
+      "id": "F-5",
+      "finding": "Stress benchmark is a single internal run; needs pinned environment, repeated trials, raw logs",
+      "classification": "Benchmark Task"
+    },
+    {
+      "id": "F-6",
+      "finding": "Public positioning language predates WOS-CONST-3.1 Canonical External Statement",
+      "classification": "Documentation Improvement -- constitutional debt, highest priority"
+    }
+  ],
+  "amendment_log_pointer": "See WOS-CONST-3.5 Amendment Log (Amendments 3.0 through 3.5). Changes to this registry require the same procedure.",
+  "maxim": "The Constitution survives the model.",
+  "registry_changelog": [
+    {
+      "version": "1.3",
+      "date": "2026-07-04",
+      "change": "Supreme authority updated to WOS-CONST-3.5 (Constitutionally Frozen); compatibility floor raised; no substantive classification changes"
+    },
+    {
+      "version": "1.2",
+      "date": "2026-07-03",
+      "change": "Added registry_uuid, schema_version, compatibility block, canonical citation format, detached-style registry_sha256 fingerprint (computed excluding the hash field itself)"
+    },
+    {
+      "version": "1.1",
+      "date": "2026-07-03",
+      "change": "Authority hierarchy corrected: WOS-CONST-3.1 supreme, registry is index. Added supreme_authority, registry_role, registry_controls fields. ASCII-safe encoding."
+    },
+    {
+      "version": "1.0",
+      "date": "2026-07-03",
+      "change": "Initial canonical registry"
+    }
+  ]
+}
