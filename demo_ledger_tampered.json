@@ -1,0 +1,40 @@
+{
+  "domain": "TEST/DEMO",
+  "genesis": "b8d6f5edc9d48de2ccaf6f31d8a1d419dea0fa0bdecac692973059d03bfb019b",
+  "chain_head": "75798a9c39752d397ee0c657a98a6ee15104c7381555cf79e079e835b62dbddb",
+  "signature": "efb597a4d96ad8488dac90f569fe82624360737daa2d85ebb5bf896e5703e6a4c6491594e9b29aed72633af41f011ddc1249fff33f081fac0107d0eb62a0cf07",
+  "public_key": "93f5d45af185bd45eb94c494ac5e6c3b8689cd27a7ad02a54e6eb6f107fbf7fb",
+  "entry_count": 3,
+  "entries": [
+    {
+      "index": 0,
+      "prev_hash": "b8d6f5edc9d48de2ccaf6f31d8a1d419dea0fa0bdecac692973059d03bfb019b",
+      "payload": {
+        "step": 0,
+        "action": "action_0",
+        "decision": "AUTHORIZE"
+      },
+      "entry_hash": "c4ccdabcecbd101899cedb13b5b4c827b547da1d51750e9c71dc3111c67812c5"
+    },
+    {
+      "index": 1,
+      "prev_hash": "c4ccdabcecbd101899cedb13b5b4c827b547da1d51750e9c71dc3111c67812c5",
+      "payload": {
+        "step": 1,
+        "action": "action_1",
+        "decision": "AUTHORIZE"
+      },
+      "entry_hash": "021c8a3cdcc3ce2439d7c2922df84f42c110776d8a81954526c7f81e961571e8"
+    },
+    {
+      "index": 2,
+      "prev_hash": "021c8a3cdcc3ce2439d7c2922df84f42c110776d8a81954526c7f81e961571e8",
+      "payload": {
+        "step": 2,
+        "action": "action_2",
+        "decision": "AUTHORIZE"
+      },
+      "entry_hash": "75798a9c39752d397ee0c657a98a6ee15104c7381555cf79e079e835b62dbddb"
+    }
+  ]
+}

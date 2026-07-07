@@ -1,14 +1,14 @@
 {
   "domain": "WHITE-SWAN/A.R.T./RescueChain",
-  "genesis": "3ac6a4dd553e66d9b0a271ab93805d712b94f9b5c2ea04131d80dabe0d4ac758",
-  "chain_head": "e50dae79ae83368f442db2e82db6895559c70bd389d03e843f5d6cebfb12d7af",
-  "signature": "2c464d194e79e4a4663fecbf84b628364cb36136a1a2eb7f3b05254327f0d561ba6d0931c09fdbdf936efb25253f39fac0d117588e78aefebe3ad02aee910a02",
-  "public_key": "11ab445030240c6e3c4a3ad5e803a8cd65f0b0fee4090c94757ee0491052a4c0",
+  "genesis": "082bd1bdd4173047d075d65b669fe401fc0c207d7399c5dce80d7f7d582a25c5",
+  "chain_head": "accc99160ae4801780f2d80c41b47910023c03c2289f7fbc61cb32be6982858b",
+  "signature": "398070cf6581d72f1d400be7fbd63e96c59b532d2446853da8dca7e10b8b4d15efec50207c443a2751dba59685ad8c2d553b3cfd0030715188a9272f7244780e",
+  "public_key": "184c806cc0d1149e36f7098325db719f0be85afaa416b7e9a1122b9aa1d267be",
   "entry_count": 7,
   "entries": [
     {
       "index": 0,
-      "prev_hash": "3ac6a4dd553e66d9b0a271ab93805d712b94f9b5c2ea04131d80dabe0d4ac758",
+      "prev_hash": "082bd1bdd4173047d075d65b669fe401fc0c207d7399c5dce80d7f7d582a25c5",
       "payload": {
         "step": 1,
         "phase": "Scout maps scene",
@@ -39,11 +39,11 @@
           }
         ]
       },
-      "entry_hash": "fb35c72b4c21d600cf12453fa07f27709ab8ac24b1285d675dcb7148ca2ff54b"
+      "entry_hash": "828e48c6746f31f8a67e59fa6381dc4cc6e731ed6c4e1ceb550b1f295b9db54b"
     },
     {
       "index": 1,
-      "prev_hash": "fb35c72b4c21d600cf12453fa07f27709ab8ac24b1285d675dcb7148ca2ff54b",
+      "prev_hash": "828e48c6746f31f8a67e59fa6381dc4cc6e731ed6c4e1ceb550b1f295b9db54b",
       "payload": {
         "step": 2,
         "phase": "Sentinel establishes comms",
@@ -66,11 +66,11 @@
           }
         ]
       },
-      "entry_hash": "94443721e7698faf3a53945899c939d4d9cc6acf052130f8ba6c95ec9df79aa0"
+      "entry_hash": "b24a971c67c5036aa52f6bb11616ab21228b07154f360513a00ef8880feb0bcf"
     },
     {
       "index": 2,
-      "prev_hash": "94443721e7698faf3a53945899c939d4d9cc6acf052130f8ba6c95ec9df79aa0",
+      "prev_hash": "b24a971c67c5036aa52f6bb11616ab21228b07154f360513a00ef8880feb0bcf",
       "payload": {
         "step": 3,
         "phase": "Pathfinder finds corridor",
@@ -109,17 +109,17 @@
           }
         ]
       },
-      "entry_hash": "28060b681a4e028b5ce649f271a26315a4ca0855bbed1fe565ee24483c21e75d"
+      "entry_hash": "6408454fc402184b1cfd9240af113d97eeed352f3b04a883ba71956c16559239"
     },
     {
       "index": 3,
-      "prev_hash": "28060b681a4e028b5ce649f271a26315a4ca0855bbed1fe565ee24483c21e75d",
+      "prev_hash": "6408454fc402184b1cfd9240af113d97eeed352f3b04a883ba71956c16559239",
       "payload": {
         "step": 4,
         "phase": "Guardian clears path",
         "action": "Guardian: scraper-blade debris clear",
         "decision": "AUTHORIZE",
-        "basis": "degraded (Sentinel offline) — released by Incident Commander",
+        "basis": "degraded (Sentinel offline) \u2014 released by Incident Commander",
         "aggregate_confidence": 0.88,
         "participants": [
           "Guardian",
@@ -147,17 +147,17 @@
           }
         ]
       },
-      "entry_hash": "3382c6c4e694f599425523ab10dc5907da12d1954794a6232abc1f0f91d2785f"
+      "entry_hash": "2770c1afc0dff42517409ef11e231317db5fd3f32bd64c4b156d4a552cb69cc2"
     },
     {
       "index": 4,
-      "prev_hash": "3382c6c4e694f599425523ab10dc5907da12d1954794a6232abc1f0f91d2785f",
+      "prev_hash": "2770c1afc0dff42517409ef11e231317db5fd3f32bd64c4b156d4a552cb69cc2",
       "payload": {
         "step": 5,
         "phase": "Medic evaluates casualty",
         "action": "Medic: triage + vitals",
         "decision": "HOLD_FOR_COMMANDER",
-        "basis": "degraded (Sentinel offline) — needs commander ack",
+        "basis": "degraded (Sentinel offline) \u2014 needs commander ack",
         "aggregate_confidence": 1.0,
         "participants": [
           "Medic",
@@ -177,11 +177,11 @@
           }
         ]
       },
-      "entry_hash": "427b0ff46745e2aeb6542b691326f3dfc649186b1f14bad841e89e28f397df19"
+      "entry_hash": "78f7c7986aa44358554b0f77307ef8505c9c32d890639833eaf26553ad51bc37"
     },
     {
       "index": 5,
-      "prev_hash": "427b0ff46745e2aeb6542b691326f3dfc649186b1f14bad841e89e28f397df19",
+      "prev_hash": "78f7c7986aa44358554b0f77307ef8505c9c32d890639833eaf26553ad51bc37",
       "payload": {
         "step": 6,
         "phase": "Guardian extracts (attempt 1)",
@@ -223,17 +223,17 @@
           }
         ]
       },
-      "entry_hash": "a634ec131b6dfb26c1c88a577a311d8064759baabb1d40f10e4c7826620834cd"
+      "entry_hash": "60a7a2615135cf011c6de31bf142517311b7df164089be9a63fab1285819e5ff"
     },
     {
       "index": 6,
-      "prev_hash": "a634ec131b6dfb26c1c88a577a311d8064759baabb1d40f10e4c7826620834cd",
+      "prev_hash": "60a7a2615135cf011c6de31bf142517311b7df164089be9a63fab1285819e5ff",
       "payload": {
         "step": 7,
         "phase": "Guardian extracts (attempt 2)",
         "action": "Guardian: extract casualty",
         "decision": "AUTHORIZE",
-        "basis": "degraded (Sentinel offline) — released by Incident Commander",
+        "basis": "degraded (Sentinel offline) \u2014 released by Incident Commander",
         "aggregate_confidence": 0.87,
         "participants": [
           "Guardian",
@@ -269,7 +269,7 @@
           }
         ]
       },
-      "entry_hash": "e50dae79ae83368f442db2e82db6895559c70bd389d03e843f5d6cebfb12d7af"
+      "entry_hash": "accc99160ae4801780f2d80c41b47910023c03c2289f7fbc61cb32be6982858b"
     }
   ]
 }
