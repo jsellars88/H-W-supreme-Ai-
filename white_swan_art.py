@@ -209,5 +209,160 @@ def tornado_scenario(seed=7):
     print("=" * 64)
 
 
+# ============================================================================
+# WHITE SWAN A.R.T. — RescueChain
+# ============================================================================
+"""
+Turns single-action voting into a full governed incident:
+
+    access -> assess -> stabilize -> extract -> audit
+
+Eight phases. Each phase is governed by the units that participate in it.
+Two failure injections prove the system degrades SAFELY, not silently:
+
+  * Sentinel goes offline mid-mission  -> comms-degraded -> HOLD for commander
+  * Casualty destabilizes at extraction -> Medic VETO -> REFUSE (human cannot override)
+
+One hash-chained, Ed25519-signed ledger records every decision. The chain is
+the proof. The after-action report is generated FROM the ledger, not alongside it.
+
+    No unit decides alone. No commander overrides casualty safety.
+    Every rescue decision is provable.
+"""
+
+# name -> voting function (reuse the conductors already built & tested)
+UNIT_FN = {
+    "Scout": scout, "Guardian": guardian, "Pathfinder": pathfinder,
+    "Medic": medic, "Sentinel": sentinel,
+}
+SAFETY_UNIT = "Medic"   # casualty-safety authority; offline-on-casualty => hard refuse
+
+
+def run_phase(step, label, action, participants, world, ledger,
+              available, commander_override=None, casualty_phase=False):
+    # only available participants get a vote
+    present = [u for u in participants if available.get(u, True)]
+    offline = [u for u in participants if not available.get(u, True)]
+    votes = [UNIT_FN[u](action, world) for u in present]
+
+    # base governance over the votes we actually have
+    decision, basis, agg = white_swan_command(action, votes, commander_override)
+
+    # availability overlay: missing required units degrade the decision
+    if casualty_phase and SAFETY_UNIT in offline:
+        decision, basis = "REFUSE", f"{SAFETY_UNIT} offline on a casualty action — hard refuse"
+    elif offline and decision == "AUTHORIZE":
+        decision, basis = "HOLD_FOR_COMMANDER", f"degraded ({', '.join(offline)} offline) — needs commander ack"
+        if commander_override == "APPROVE":
+            decision, basis = "AUTHORIZE", f"degraded ({', '.join(offline)} offline) — released by Incident Commander"
+
+    # ---- print phase ----
+    print(f"\n  [{step}] {label}")
+    print(f"      action: {action}")
+    for v in votes:
+        flag = " (VETO)" if v["veto_exercised"] else (" (veto-auth)" if v["veto_authority"] else "")
+        print(f"        {v['unit']:11s} {v['decision']:9s} conf={v['confidence']:.2f}{flag}  {v['reason']}")
+    for u in offline:
+        print(f"        {u:11s} OFFLINE")
+    co = f"  | commander={commander_override}" if commander_override else ""
+    print(f"      -> {decision}   ({basis}){co}")
+
+    ledger.append({
+        "step": step, "phase": label, "action": action, "decision": decision,
+        "basis": basis, "aggregate_confidence": agg,
+        "participants": participants, "offline": offline,
+        "commander_override": commander_override,
+        "votes": [{"unit": v["unit"], "decision": v["decision"],
+                   "confidence": v["confidence"],
+                   "veto_authority": v["veto_authority"], "veto_exercised": v["veto_exercised"]} for v in votes],
+    })
+    return decision
+
+
+def after_action_report(ledger_doc):
+    print("\n" + "=" * 68)
+    print("  AFTER-ACTION REPORT  (generated from the signed ledger)")
+    print("=" * 68)
+    band = {"access": ["Scout maps", "Sentinel comms", "Pathfinder"],
+            "assess": ["Medic evaluates"],
+            "stabilize": ["Guardian clears"],
+            "extract": ["Guardian extracts"]}
+    for e in ledger_doc["entries"]:
+        p = e["payload"]
+        mark = {"AUTHORIZE": "OK ", "REFUSE": "REF", "HOLD_FOR_COMMANDER": "HLD"}.get(p["decision"], "?? ")
+        off = f"  offline={p['offline']}" if p.get("offline") else ""
+        co = f"  CMDR={p['commander_override']}" if p.get("commander_override") else ""
+        print(f"  [{mark}] {p['phase']:24s} conf={p['aggregate_confidence']:.2f}  {p['basis']}{off}{co}")
+    print("-" * 68)
+    auth = sum(e["payload"]["decision"] == "AUTHORIZE" for e in ledger_doc["entries"])
+    ref  = sum(e["payload"]["decision"] == "REFUSE" for e in ledger_doc["entries"])
+    hld  = sum(e["payload"]["decision"] == "HOLD_FOR_COMMANDER" for e in ledger_doc["entries"])
+    print(f"  {len(ledger_doc['entries'])} governed decisions: {auth} authorized, {hld} held, {ref} refused")
+
+
+def run_rescuechain():
+    print("=" * 68)
+    print("  WHITE SWAN A.R.T. — RescueChain :: FLASH FLOOD, COLLAPSED STRUCTURE")
+    print("  No unit decides alone. No commander overrides casualty safety.")
+    print("=" * 68)
+    led = ForensicLedger(domain="WHITE-SWAN/A.R.T./RescueChain")
+    available = {u: True for u in UNIT_FN}
+
+    base = {"visibility_m": 300, "wind_ms": 12, "structure_stability": 0.9,
+            "terrain_grade_deg": 10, "payload_kg": 60, "route_found": True,
+            "water_depth_m": 0.3, "casualty_stable": True, "evac_window_min": 45,
+            "comms_coverage": 0.85}
+
+    def w(**over):
+        d = dict(base); d.update(over); return d
+
+    # ---------- ACCESS ----------
+    run_phase(1, "Scout maps scene", "Scout: launch + map debris field",
+              ["Scout", "Sentinel"], w(), led, available)
+    run_phase(2, "Sentinel establishes comms", "Sentinel: deploy mesh + relay",
+              ["Sentinel"], w(), led, available)
+    run_phase(3, "Pathfinder finds corridor", "Pathfinder: establish access corridor",
+              ["Pathfinder", "Scout", "Sentinel"], w(water_depth_m=0.6), led, available)
+
+    # ---------- INJECT 1: Sentinel drops mid-mission ----------
+    print("\n  >>> FAILURE INJECTED: Sentinel offline (relay lost) <<<")
+    available["Sentinel"] = False
+
+    # Guardian clear path now runs comms-degraded -> HOLD, commander must ack
+    run_phase(4, "Guardian clears path", "Guardian: scraper-blade debris clear",
+              ["Guardian", "Pathfinder", "Sentinel"], w(comms_coverage=0.3), led,
+              available, commander_override="APPROVE")
+
+    # ---------- ASSESS / STABILIZE ----------
+    run_phase(5, "Medic evaluates casualty", "Medic: triage + vitals",
+              ["Medic", "Sentinel"], w(comms_coverage=0.3), led, available,
+              casualty_phase=True)
+
+    # ---------- INJECT 2: casualty destabilizes at extraction ----------
+    print("\n  >>> FAILURE INJECTED: casualty destabilizes during extraction <<<")
+    run_phase(6, "Guardian extracts (attempt 1)", "Guardian: extract casualty",
+              ["Guardian", "Medic", "Pathfinder", "Sentinel"],
+              w(comms_coverage=0.3, casualty_stable=False, evac_window_min=12),
+              led, available, casualty_phase=True, commander_override="APPROVE")
+
+    # commander tries to force it -> still blocked by Medic veto (already shown above);
+    # team re-stabilizes, then extraction authorized
+    print("\n  >>> Casualty re-stabilized; re-attempt <<<")
+    run_phase(7, "Guardian extracts (attempt 2)", "Guardian: extract casualty",
+              ["Guardian", "Medic", "Pathfinder", "Sentinel"],
+              w(comms_coverage=0.3, casualty_stable=True, evac_window_min=20),
+              led, available, casualty_phase=True, commander_override="APPROVE")
+
+    # ---------- AUDIT ----------
+    path = "/mnt/user-data/outputs/rescuechain_ledger_v1_1.json"
+    led.export(path)
+    ok, reason = ForensicLedger.verify(path)
+    after_action_report(led.sealed)
+    print("-" * 68)
+    print(f"  Ledger sealed & exported: {path}")
+    print(f"  Independent verification: {'PASS' if ok else 'FAIL'} — {reason}")
+    print("=" * 68)
+
+
 if __name__ == "__main__":
     tornado_scenario()
