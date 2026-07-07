@@ -17,12 +17,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Import core modules
-from white_swan_art import (
-    white_swan_command,
-    tornado_scenario,
-    run_rescuechain,
-    UNITS
-)
+import white_swan_art as art
 from governance_ledger import ForensicLedger
 
 
@@ -65,12 +60,14 @@ class WhiteSwan:
             print("\n" + "="*70)
             print("TORNADO SCENARIO: 6-Decision High-Risk Rescue")
             print("="*70)
-            tornado_scenario()
-            self.results["tornado"] = {"status": "PASS"}
-            return True
+            ok = art.tornado_scenario(ledger_path="art_tornado_ledger.json")
+            self.results["tornado"] = {"status": "PASS" if ok else "FAIL"}
+            return ok
         except Exception as e:
             self.results["tornado"] = {"status": "FAIL", "error": str(e)}
             print(f"ERROR: Tornado scenario failed: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def run_rescuechain(self):
@@ -80,12 +77,14 @@ class WhiteSwan:
             print("\n" + "="*70)
             print("RESCUECHAIN SCENARIO: 7-Phase Multi-Failure Mission")
             print("="*70)
-            run_rescuechain()
-            self.results["rescuechain"] = {"status": "PASS"}
-            return True
+            ok = art.run_rescuechain(ledger_path="rescuechain_ledger.json")
+            self.results["rescuechain"] = {"status": "PASS" if ok else "FAIL"}
+            return ok
         except Exception as e:
             self.results["rescuechain"] = {"status": "FAIL", "error": str(e)}
             print(f"ERROR: RescueChain scenario failed: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def verify_ledgers(self):
@@ -114,6 +113,10 @@ class WhiteSwan:
                 all_verified = all_verified and ok
             else:
                 print(f"\n{ledger_path}: SKIP (not found)")
+                self.results.setdefault("ledgers", {})[ledger_path] = {
+                    "status": "SKIP",
+                    "reason": "Ledger file not generated"
+                }
         
         return all_verified
     
@@ -167,6 +170,8 @@ class WhiteSwan:
                     failed += 1
             except Exception as e:
                 print(f"ERROR in {op_name}: {e}")
+                import traceback
+                traceback.print_exc()
                 failed += 1
         
         # Generate report
