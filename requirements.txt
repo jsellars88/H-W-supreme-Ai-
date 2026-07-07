@@ -2,3 +2,15 @@ fastapi==0.115.0
 uvicorn[standard]==0.32.0
 pynacl==1.5.0
 requests==2.33.0
+
+# White Swan A.R.T. — Additional Dependencies (F-3 partial closure)
+# Governance Engine + Test Suite + Forensic Ledger
+
+# Cryptography: Ed25519 signatures for forensic ledger chain integrity
+cryptography>=42.0
+
+# Testing framework for comprehensive test suite
+pytest>=8.0
+
+# JSON processing (standard library, included for reference)
+# json (builtin)
