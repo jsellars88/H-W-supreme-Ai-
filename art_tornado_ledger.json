@@ -1,0 +1,304 @@
+{
+  "domain": "WHITE-SWAN/A.R.T.",
+  "genesis": "472bc8184c9f21569b5dae4fd41c6250ee63f46fa76a9657b6a4823b295b2f5c",
+  "chain_head": "ec1b1a9520fe44245a854816d5cb2f8162eb074b858f71dca722b573a7b973cb",
+  "signature": "3d76728579c03cf858e07e419064f03dc31e5e5e23c54d95c1fd26edb791dee09950264a925d1ad25a1dcdd6233e5d7ffc902b28b10b86597ab252c1d16c0008",
+  "public_key": "a30d788bbabf938f89534f3e4a8eca728fb1d168870d9f76a9de8ad47033ea2f",
+  "entry_count": 6,
+  "entries": [
+    {
+      "index": 0,
+      "prev_hash": "472bc8184c9f21569b5dae4fd41c6250ee63f46fa76a9657b6a4823b295b2f5c",
+      "payload": {
+        "action": "Scout: launch air recon",
+        "decision": "AUTHORIZE",
+        "basis": "consensus, confidence 0.88",
+        "aggregate_confidence": 0.88,
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.74,
+            "veto": false,
+            "sensor_hash": "bc39dc61fd762ae8"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.97,
+            "veto": false,
+            "sensor_hash": "37e8b79a041f7a6f"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 1.0,
+            "veto": false,
+            "sensor_hash": "c1eb188a1c833ddb"
+          },
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 1.0,
+            "veto": true,
+            "sensor_hash": "ae81af9054c70362"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.7,
+            "veto": false,
+            "sensor_hash": "efbd5fa02539196d"
+          }
+        ]
+      },
+      "entry_hash": "01344284e5fb53cba5931b6d803c1b0358f420f5154cfbb8f418e95bdd5847ea"
+    },
+    {
+      "index": 1,
+      "prev_hash": "01344284e5fb53cba5931b6d803c1b0358f420f5154cfbb8f418e95bdd5847ea",
+      "payload": {
+        "action": "Guardian: enter collapsed structure",
+        "decision": "REFUSE",
+        "basis": "no consensus (1 dissent)",
+        "aggregate_confidence": 0.75,
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.62,
+            "veto": false,
+            "sensor_hash": "894094b3affe6222"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "REFUSE",
+            "confidence": 0.62,
+            "veto": false,
+            "sensor_hash": "d7a50e171402d912"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.92,
+            "veto": false,
+            "sensor_hash": "8237dea205ba553e"
+          },
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 1.0,
+            "veto": true,
+            "sensor_hash": "d7b3f0e12fbec95c"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.57,
+            "veto": false,
+            "sensor_hash": "360ad98416234ffb"
+          }
+        ]
+      },
+      "entry_hash": "3d4f48a4a05e42da6e333a23873eb053a4e6877cd9058183f63271f60d7ce131"
+    },
+    {
+      "index": 2,
+      "prev_hash": "3d4f48a4a05e42da6e333a23873eb053a4e6877cd9058183f63271f60d7ce131",
+      "payload": {
+        "action": "Guardian: move casualty now",
+        "decision": "REFUSE",
+        "basis": "VETO by Medic: casualty unstable",
+        "aggregate_confidence": 0.73,
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.71,
+            "veto": false,
+            "sensor_hash": "5ed3122c1cfb4f1a"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.75,
+            "veto": false,
+            "sensor_hash": "76ae6543cf108a01"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.95,
+            "veto": false,
+            "sensor_hash": "4d557239b7746f36"
+          },
+          {
+            "unit": "Medic",
+            "decision": "REFUSE",
+            "confidence": 0.59,
+            "veto": true,
+            "sensor_hash": "a975776d08c7d419"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.64,
+            "veto": false,
+            "sensor_hash": "0938fb221d8a3a5d"
+          }
+        ]
+      },
+      "entry_hash": "6ea1eec38059e885c4353ca062bb7be2c8221fcd709ebae9a6121482e7f82b0a"
+    },
+    {
+      "index": 3,
+      "prev_hash": "6ea1eec38059e885c4353ca062bb7be2c8221fcd709ebae9a6121482e7f82b0a",
+      "payload": {
+        "action": "Guardian: move casualty now",
+        "decision": "REFUSE",
+        "basis": "VETO by Medic: casualty unstable | commander approval BLOCKED (cannot override casualty veto)",
+        "aggregate_confidence": 0.73,
+        "commander_override": "APPROVE",
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.71,
+            "veto": false,
+            "sensor_hash": "5ed3122c1cfb4f1a"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.75,
+            "veto": false,
+            "sensor_hash": "76ae6543cf108a01"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.95,
+            "veto": false,
+            "sensor_hash": "4d557239b7746f36"
+          },
+          {
+            "unit": "Medic",
+            "decision": "REFUSE",
+            "confidence": 0.59,
+            "veto": true,
+            "sensor_hash": "a975776d08c7d419"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.64,
+            "veto": false,
+            "sensor_hash": "0938fb221d8a3a5d"
+          }
+        ]
+      },
+      "entry_hash": "e8e05438ac28c84088f4c8aa8d8a300c3979904e7e1f2d38e1075b3f053c0887"
+    },
+    {
+      "index": 4,
+      "prev_hash": "e8e05438ac28c84088f4c8aa8d8a300c3979904e7e1f2d38e1075b3f053c0887",
+      "payload": {
+        "action": "Pathfinder: cross flooded corridor",
+        "decision": "HOLD_FOR_COMMANDER",
+        "basis": "consensus but low confidence (0.6)",
+        "aggregate_confidence": 0.6,
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.53,
+            "veto": false,
+            "sensor_hash": "a8ae70d5e8bc71ad"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.53,
+            "veto": false,
+            "sensor_hash": "3e2086d025df3635"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.72,
+            "veto": false,
+            "sensor_hash": "54b941ebd3c837a3"
+          },
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 0.76,
+            "veto": true,
+            "sensor_hash": "b1b1d6ba46633fdd"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.48,
+            "veto": false,
+            "sensor_hash": "02bb9403b56f767c"
+          }
+        ]
+      },
+      "entry_hash": "689536a6a07e0872cf8aa3e756bfd269bee81f9e9544e065e58241acc19e4257"
+    },
+    {
+      "index": 5,
+      "prev_hash": "689536a6a07e0872cf8aa3e756bfd269bee81f9e9544e065e58241acc19e4257",
+      "payload": {
+        "action": "Pathfinder: cross flooded corridor",
+        "decision": "AUTHORIZE",
+        "basis": "released by Incident Commander",
+        "aggregate_confidence": 0.6,
+        "commander_override": "APPROVE",
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.53,
+            "veto": false,
+            "sensor_hash": "a8ae70d5e8bc71ad"
+          },
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.53,
+            "veto": false,
+            "sensor_hash": "3e2086d025df3635"
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.72,
+            "veto": false,
+            "sensor_hash": "54b941ebd3c837a3"
+          },
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 0.76,
+            "veto": true,
+            "sensor_hash": "b1b1d6ba46633fdd"
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.48,
+            "veto": false,
+            "sensor_hash": "02bb9403b56f767c"
+          }
+        ]
+      },
+      "entry_hash": "ec1b1a9520fe44245a854816d5cb2f8162eb074b858f71dca722b573a7b973cb"
+    }
+  ]
+}
