@@ -2,8 +2,8 @@
   "domain": "TEST/DEMO",
   "genesis": "b8d6f5edc9d48de2ccaf6f31d8a1d419dea0fa0bdecac692973059d03bfb019b",
   "chain_head": "75798a9c39752d397ee0c657a98a6ee15104c7381555cf79e079e835b62dbddb",
-  "signature": "efb597a4d96ad8488dac90f569fe82624360737daa2d85ebb5bf896e5703e6a4c6491594e9b29aed72633af41f011ddc1249fff33f081fac0107d0eb62a0cf07",
-  "public_key": "93f5d45af185bd45eb94c494ac5e6c3b8689cd27a7ad02a54e6eb6f107fbf7fb",
+  "signature": "8b47d7fa06bab8ed8a409ef6617d6f52e10cd2f05a94ad95bf9e1d5d306c0e7ec034c01d6b3ffe09449eaccd1e3b61c9970d54b9fc04f68ea572423ca5883801",
+  "public_key": "ca150621070b40a9bbc8a922143216174dcd9df63c4f83b09037e1ba003a7e4c",
   "entry_count": 3,
   "entries": [
     {
