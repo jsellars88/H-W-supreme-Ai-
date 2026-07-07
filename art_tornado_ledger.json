@@ -1,14 +1,14 @@
 {
   "domain": "WHITE-SWAN/A.R.T.",
-  "genesis": "472bc8184c9f21569b5dae4fd41c6250ee63f46fa76a9657b6a4823b295b2f5c",
-  "chain_head": "ec1b1a9520fe44245a854816d5cb2f8162eb074b858f71dca722b573a7b973cb",
-  "signature": "3d76728579c03cf858e07e419064f03dc31e5e5e23c54d95c1fd26edb791dee09950264a925d1ad25a1dcdd6233e5d7ffc902b28b10b86597ab252c1d16c0008",
-  "public_key": "a30d788bbabf938f89534f3e4a8eca728fb1d168870d9f76a9de8ad47033ea2f",
+  "genesis": "152955851488bd75769f3d595871ae8a9f14b42a0b22bd21a1829abd28656cd6",
+  "chain_head": "77f4f87366d69f8b8e40ca5a17585568d82cdd4de2a46ed04b2784467c4fdc33",
+  "signature": "fc8eb7f4e61e082c275ac69482162086673cce2e251e349d4b9ad335d8eeebdd035076493fcc0f361854421c62ea877a620c2c69479b24acce5a677c23d63906",
+  "public_key": "35d8e9d21c673e9677f8e4df9c53faa14183d4cc476c42548f7b8e393d4b9d64",
   "entry_count": 6,
   "entries": [
     {
       "index": 0,
-      "prev_hash": "472bc8184c9f21569b5dae4fd41c6250ee63f46fa76a9657b6a4823b295b2f5c",
+      "prev_hash": "152955851488bd75769f3d595871ae8a9f14b42a0b22bd21a1829abd28656cd6",
       "payload": {
         "action": "Scout: launch air recon",
         "decision": "AUTHORIZE",
@@ -20,44 +20,49 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.74,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "bc39dc61fd762ae8"
           },
           {
             "unit": "Guardian",
             "decision": "AUTHORIZE",
             "confidence": 0.97,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "37e8b79a041f7a6f"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 1.0,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "c1eb188a1c833ddb"
           },
           {
             "unit": "Medic",
             "decision": "AUTHORIZE",
             "confidence": 1.0,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": false,
             "sensor_hash": "ae81af9054c70362"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.7,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "efbd5fa02539196d"
           }
         ]
       },
-      "entry_hash": "01344284e5fb53cba5931b6d803c1b0358f420f5154cfbb8f418e95bdd5847ea"
+      "entry_hash": "5d6a577de394378cc191d37de32f606b684c30bca60dc0ce77e98984a55c6845"
     },
     {
       "index": 1,
-      "prev_hash": "01344284e5fb53cba5931b6d803c1b0358f420f5154cfbb8f418e95bdd5847ea",
+      "prev_hash": "5d6a577de394378cc191d37de32f606b684c30bca60dc0ce77e98984a55c6845",
       "payload": {
         "action": "Guardian: enter collapsed structure",
         "decision": "REFUSE",
@@ -69,44 +74,49 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.62,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "894094b3affe6222"
           },
           {
             "unit": "Guardian",
             "decision": "REFUSE",
             "confidence": 0.62,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "d7a50e171402d912"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 0.92,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "8237dea205ba553e"
           },
           {
             "unit": "Medic",
             "decision": "AUTHORIZE",
             "confidence": 1.0,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": false,
             "sensor_hash": "d7b3f0e12fbec95c"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.57,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "360ad98416234ffb"
           }
         ]
       },
-      "entry_hash": "3d4f48a4a05e42da6e333a23873eb053a4e6877cd9058183f63271f60d7ce131"
+      "entry_hash": "c0842c1d6b8ce9e1a2ed3145ed492d578effc76f662e5cb467cdf100a646ff15"
     },
     {
       "index": 2,
-      "prev_hash": "3d4f48a4a05e42da6e333a23873eb053a4e6877cd9058183f63271f60d7ce131",
+      "prev_hash": "c0842c1d6b8ce9e1a2ed3145ed492d578effc76f662e5cb467cdf100a646ff15",
       "payload": {
         "action": "Guardian: move casualty now",
         "decision": "REFUSE",
@@ -118,44 +128,49 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.71,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "5ed3122c1cfb4f1a"
           },
           {
             "unit": "Guardian",
             "decision": "AUTHORIZE",
             "confidence": 0.75,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "76ae6543cf108a01"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 0.95,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "4d557239b7746f36"
           },
           {
             "unit": "Medic",
             "decision": "REFUSE",
             "confidence": 0.59,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": true,
             "sensor_hash": "a975776d08c7d419"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.64,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "0938fb221d8a3a5d"
           }
         ]
       },
-      "entry_hash": "6ea1eec38059e885c4353ca062bb7be2c8221fcd709ebae9a6121482e7f82b0a"
+      "entry_hash": "23df6c403f41c942cf1f3b3e01428fcb77d01d6699e5f9903f54f7d01be6d440"
     },
     {
       "index": 3,
-      "prev_hash": "6ea1eec38059e885c4353ca062bb7be2c8221fcd709ebae9a6121482e7f82b0a",
+      "prev_hash": "23df6c403f41c942cf1f3b3e01428fcb77d01d6699e5f9903f54f7d01be6d440",
       "payload": {
         "action": "Guardian: move casualty now",
         "decision": "REFUSE",
@@ -167,44 +182,49 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.71,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "5ed3122c1cfb4f1a"
           },
           {
             "unit": "Guardian",
             "decision": "AUTHORIZE",
             "confidence": 0.75,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "76ae6543cf108a01"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 0.95,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "4d557239b7746f36"
           },
           {
             "unit": "Medic",
             "decision": "REFUSE",
             "confidence": 0.59,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": true,
             "sensor_hash": "a975776d08c7d419"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.64,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "0938fb221d8a3a5d"
           }
         ]
       },
-      "entry_hash": "e8e05438ac28c84088f4c8aa8d8a300c3979904e7e1f2d38e1075b3f053c0887"
+      "entry_hash": "9e3569749500315b5be1f8e6444b876bd5029ea47a2fbeffafbe86586ca4151f"
     },
     {
       "index": 4,
-      "prev_hash": "e8e05438ac28c84088f4c8aa8d8a300c3979904e7e1f2d38e1075b3f053c0887",
+      "prev_hash": "9e3569749500315b5be1f8e6444b876bd5029ea47a2fbeffafbe86586ca4151f",
       "payload": {
         "action": "Pathfinder: cross flooded corridor",
         "decision": "HOLD_FOR_COMMANDER",
@@ -216,44 +236,49 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.53,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "a8ae70d5e8bc71ad"
           },
           {
             "unit": "Guardian",
             "decision": "AUTHORIZE",
             "confidence": 0.53,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "3e2086d025df3635"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 0.72,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "54b941ebd3c837a3"
           },
           {
             "unit": "Medic",
             "decision": "AUTHORIZE",
             "confidence": 0.76,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": false,
             "sensor_hash": "b1b1d6ba46633fdd"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.48,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "02bb9403b56f767c"
           }
         ]
       },
-      "entry_hash": "689536a6a07e0872cf8aa3e756bfd269bee81f9e9544e065e58241acc19e4257"
+      "entry_hash": "798c6a70193fe9ba28a6197e58a2e4c9ee60b27badb4c4ce7b8625601d9c03a5"
     },
     {
       "index": 5,
-      "prev_hash": "689536a6a07e0872cf8aa3e756bfd269bee81f9e9544e065e58241acc19e4257",
+      "prev_hash": "798c6a70193fe9ba28a6197e58a2e4c9ee60b27badb4c4ce7b8625601d9c03a5",
       "payload": {
         "action": "Pathfinder: cross flooded corridor",
         "decision": "AUTHORIZE",
@@ -265,40 +290,45 @@
             "unit": "Scout",
             "decision": "AUTHORIZE",
             "confidence": 0.53,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "a8ae70d5e8bc71ad"
           },
           {
             "unit": "Guardian",
             "decision": "AUTHORIZE",
             "confidence": 0.53,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "3e2086d025df3635"
           },
           {
             "unit": "Pathfinder",
             "decision": "AUTHORIZE",
             "confidence": 0.72,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "54b941ebd3c837a3"
           },
           {
             "unit": "Medic",
             "decision": "AUTHORIZE",
             "confidence": 0.76,
-            "veto": true,
+            "veto_authority": true,
+            "veto_exercised": false,
             "sensor_hash": "b1b1d6ba46633fdd"
           },
           {
             "unit": "Sentinel",
             "decision": "AUTHORIZE",
             "confidence": 0.48,
-            "veto": false,
+            "veto_authority": false,
+            "veto_exercised": false,
             "sensor_hash": "02bb9403b56f767c"
           }
         ]
       },
-      "entry_hash": "ec1b1a9520fe44245a854816d5cb2f8162eb074b858f71dca722b573a7b973cb"
+      "entry_hash": "77f4f87366d69f8b8e40ca5a17585568d82cdd4de2a46ed04b2784467c4fdc33"
     }
   ]
 }
