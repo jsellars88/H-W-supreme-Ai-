@@ -1,0 +1,275 @@
+{
+  "domain": "WHITE-SWAN/A.R.T./RescueChain",
+  "genesis": "3ac6a4dd553e66d9b0a271ab93805d712b94f9b5c2ea04131d80dabe0d4ac758",
+  "chain_head": "e50dae79ae83368f442db2e82db6895559c70bd389d03e843f5d6cebfb12d7af",
+  "signature": "2c464d194e79e4a4663fecbf84b628364cb36136a1a2eb7f3b05254327f0d561ba6d0931c09fdbdf936efb25253f39fac0d117588e78aefebe3ad02aee910a02",
+  "public_key": "11ab445030240c6e3c4a3ad5e803a8cd65f0b0fee4090c94757ee0491052a4c0",
+  "entry_count": 7,
+  "entries": [
+    {
+      "index": 0,
+      "prev_hash": "3ac6a4dd553e66d9b0a271ab93805d712b94f9b5c2ea04131d80dabe0d4ac758",
+      "payload": {
+        "step": 1,
+        "phase": "Scout maps scene",
+        "action": "Scout: launch + map debris field",
+        "decision": "AUTHORIZE",
+        "basis": "consensus, confidence 0.77",
+        "aggregate_confidence": 0.77,
+        "participants": [
+          "Scout",
+          "Sentinel"
+        ],
+        "offline": [],
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.77,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.76,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "fb35c72b4c21d600cf12453fa07f27709ab8ac24b1285d675dcb7148ca2ff54b"
+    },
+    {
+      "index": 1,
+      "prev_hash": "fb35c72b4c21d600cf12453fa07f27709ab8ac24b1285d675dcb7148ca2ff54b",
+      "payload": {
+        "step": 2,
+        "phase": "Sentinel establishes comms",
+        "action": "Sentinel: deploy mesh + relay",
+        "decision": "AUTHORIZE",
+        "basis": "consensus, confidence 0.76",
+        "aggregate_confidence": 0.76,
+        "participants": [
+          "Sentinel"
+        ],
+        "offline": [],
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.76,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "94443721e7698faf3a53945899c939d4d9cc6acf052130f8ba6c95ec9df79aa0"
+    },
+    {
+      "index": 2,
+      "prev_hash": "94443721e7698faf3a53945899c939d4d9cc6acf052130f8ba6c95ec9df79aa0",
+      "payload": {
+        "step": 3,
+        "phase": "Pathfinder finds corridor",
+        "action": "Pathfinder: establish access corridor",
+        "decision": "AUTHORIZE",
+        "basis": "consensus, confidence 0.79",
+        "aggregate_confidence": 0.79,
+        "participants": [
+          "Pathfinder",
+          "Scout",
+          "Sentinel"
+        ],
+        "offline": [],
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.85,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Scout",
+            "decision": "AUTHORIZE",
+            "confidence": 0.77,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Sentinel",
+            "decision": "AUTHORIZE",
+            "confidence": 0.76,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "28060b681a4e028b5ce649f271a26315a4ca0855bbed1fe565ee24483c21e75d"
+    },
+    {
+      "index": 3,
+      "prev_hash": "28060b681a4e028b5ce649f271a26315a4ca0855bbed1fe565ee24483c21e75d",
+      "payload": {
+        "step": 4,
+        "phase": "Guardian clears path",
+        "action": "Guardian: scraper-blade debris clear",
+        "decision": "AUTHORIZE",
+        "basis": "degraded (Sentinel offline) — released by Incident Commander",
+        "aggregate_confidence": 0.88,
+        "participants": [
+          "Guardian",
+          "Pathfinder",
+          "Sentinel"
+        ],
+        "offline": [
+          "Sentinel"
+        ],
+        "commander_override": "APPROVE",
+        "votes": [
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.83,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.92,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "3382c6c4e694f599425523ab10dc5907da12d1954794a6232abc1f0f91d2785f"
+    },
+    {
+      "index": 4,
+      "prev_hash": "3382c6c4e694f599425523ab10dc5907da12d1954794a6232abc1f0f91d2785f",
+      "payload": {
+        "step": 5,
+        "phase": "Medic evaluates casualty",
+        "action": "Medic: triage + vitals",
+        "decision": "HOLD_FOR_COMMANDER",
+        "basis": "degraded (Sentinel offline) — needs commander ack",
+        "aggregate_confidence": 1.0,
+        "participants": [
+          "Medic",
+          "Sentinel"
+        ],
+        "offline": [
+          "Sentinel"
+        ],
+        "commander_override": null,
+        "votes": [
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 1.0,
+            "veto_authority": true,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "427b0ff46745e2aeb6542b691326f3dfc649186b1f14bad841e89e28f397df19"
+    },
+    {
+      "index": 5,
+      "prev_hash": "427b0ff46745e2aeb6542b691326f3dfc649186b1f14bad841e89e28f397df19",
+      "payload": {
+        "step": 6,
+        "phase": "Guardian extracts (attempt 1)",
+        "action": "Guardian: extract casualty",
+        "decision": "REFUSE",
+        "basis": "VETO by Medic: casualty unstable | commander approval BLOCKED (cannot override casualty veto)",
+        "aggregate_confidence": 0.74,
+        "participants": [
+          "Guardian",
+          "Medic",
+          "Pathfinder",
+          "Sentinel"
+        ],
+        "offline": [
+          "Sentinel"
+        ],
+        "commander_override": "APPROVE",
+        "votes": [
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.83,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Medic",
+            "decision": "REFUSE",
+            "confidence": 0.48,
+            "veto_authority": true,
+            "veto_exercised": true
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.92,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "a634ec131b6dfb26c1c88a577a311d8064759baabb1d40f10e4c7826620834cd"
+    },
+    {
+      "index": 6,
+      "prev_hash": "a634ec131b6dfb26c1c88a577a311d8064759baabb1d40f10e4c7826620834cd",
+      "payload": {
+        "step": 7,
+        "phase": "Guardian extracts (attempt 2)",
+        "action": "Guardian: extract casualty",
+        "decision": "AUTHORIZE",
+        "basis": "degraded (Sentinel offline) — released by Incident Commander",
+        "aggregate_confidence": 0.87,
+        "participants": [
+          "Guardian",
+          "Medic",
+          "Pathfinder",
+          "Sentinel"
+        ],
+        "offline": [
+          "Sentinel"
+        ],
+        "commander_override": "APPROVE",
+        "votes": [
+          {
+            "unit": "Guardian",
+            "decision": "AUTHORIZE",
+            "confidence": 0.83,
+            "veto_authority": false,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Medic",
+            "decision": "AUTHORIZE",
+            "confidence": 0.85,
+            "veto_authority": true,
+            "veto_exercised": false
+          },
+          {
+            "unit": "Pathfinder",
+            "decision": "AUTHORIZE",
+            "confidence": 0.92,
+            "veto_authority": false,
+            "veto_exercised": false
+          }
+        ]
+      },
+      "entry_hash": "e50dae79ae83368f442db2e82db6895559c70bd389d03e843f5d6cebfb12d7af"
+    }
+  ]
+}
