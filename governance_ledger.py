@@ -126,6 +126,11 @@ class ForensicLedger:
         
         self._sealed = ledger_doc
     
+    @property
+    def sealed(self):
+        """Get the sealed ledger document (after export)."""
+        return self._sealed
+    
     @staticmethod
     def verify(path: str) -> tuple[bool, str]:
         """
