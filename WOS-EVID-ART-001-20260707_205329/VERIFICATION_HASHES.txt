@@ -1,0 +1,12 @@
+SHA256 Hashes for Artifact Verification
+============================================================
+Generated: 2026-07-07T20:53:31.355175
+Git Commit: a834c94a344b9c6c3af666e68336c01bc0fbaa98
+============================================================
+
+dc690c9b500fac6242d659304c752015125c39ffc9b72c088e152d59e92f0cf7  rescuechain_ledger.json
+2eab400b7d372a2fb4e9eb9cbfa049b07be4914269e195bd73e01abec9bf471f  integration_test_output.txt
+e8070456a9749ef2e038a3822faa53f685e880042b37915ad061090babfe6c02  OPERATIONS_REPORT.json
+13944e36bc0d2d23435d35d3725419ed41bea8a9107762d558b341fcc7e32fe4  art_tornado_ledger.json
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  VERIFICATION_HASHES.txt
+57cba6b4769e1e49f3ca67dad316693e82e63fb0ad9a5862e2614015a1ca444b  main_all_output.txt

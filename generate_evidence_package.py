@@ -314,7 +314,7 @@ python -c "
 from governance_ledger import ForensicLedger
 for ledger in ['art_tornado_ledger.json', 'rescuechain_ledger.json']:
     ok, reason = ForensicLedger.verify(ledger)
-    print(f'{ledger}: {\"✓\" if ok else \"✗\"} {reason}')
+    print(f'{{ledger}}: {{"✓" if ok else "✗"}} {{reason}}')
 "
 ```
 
@@ -487,14 +487,14 @@ from governance_ledger import ForensicLedger
 
 print('Verifying Tornado Ledger...')
 ok, reason = ForensicLedger.verify('art_tornado_ledger.json')
-print(f'  Result: {\"✓ VALID\" if ok else \"✗ INVALID\"}')
-print(f'  Reason: {reason}')
+print(f'  Result: {{"✓ VALID" if ok else "✗ INVALID"}}')
+print(f'  Reason: {{reason}}')
 
 print()
 print('Verifying RescueChain Ledger...')
 ok, reason = ForensicLedger.verify('rescuechain_ledger.json')
-print(f'  Result: {\"✓ VALID\" if ok else \"✗ INVALID\"}')
-print(f'  Reason: {reason}')
+print(f'  Result: {{"✓ VALID" if ok else "✗ INVALID"}}')
+print(f'  Reason: {{reason}}')
 "
 ```
 
@@ -527,10 +527,10 @@ import hashlib
 with open('art_tornado_ledger.json') as f:
     doc = json.load(f)
 
-print(f'Verifying chain for {doc[\"domain\"]}...')
-print(f'Genesis: {doc[\"genesis\"][:16]}...')
-print(f'Chain Head: {doc[\"chain_head\"][:16]}...')
-print(f'Entry Count: {doc[\"entry_count\"]}')
+print(f'Verifying chain for {{doc["domain"]}}...')
+print(f'Genesis: {{doc["genesis"][:16]}}...')
+print(f'Chain Head: {{doc["chain_head"][:16]}}...')
+print(f'Entry Count: {{doc["entry_count"]}}')
 print()
 
 # Verify each entry links to the next
@@ -540,7 +540,7 @@ for e in doc['entries']:
     ).hexdigest()
     stored_hash = e['entry_hash']
     status = '✓' if computed_hash == stored_hash else '✗'
-    print(f'Entry {e[\"index\"]}: {status}')
+    print(f'Entry {{e["index"]}}: {{status}}')
 
 print()
 print('Chain verified: all entry hashes are valid')
