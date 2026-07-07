@@ -1,0 +1,285 @@
+=== STDOUT ===
+
+╔====================================================================╗
+║                                                                    ║
+║              White Swan A.R.T. — Integration Test Suite            ║
+║                                                                    ║
+╚====================================================================╝
+
+======================================================================
+TEST: Module Imports
+======================================================================
+Testing module imports...
+  ✓ white_swan_art imported
+  ✓ governance_ledger imported
+  ✓ main imported
+✓ PASS
+
+======================================================================
+TEST: Unit & Function Exports
+======================================================================
+Testing exported symbols...
+  ✓ UNITS exported (5 units)
+  ✓ white_swan_command exported
+  ✓ tornado_scenario exported
+  ✓ run_rescuechain exported
+✓ PASS
+
+======================================================================
+TEST: ForensicLedger API
+======================================================================
+Testing ForensicLedger API...
+  ✓ ForensicLedger instantiated
+  ✓ append() works
+  ✓ export() works (integration_test_ledger.json)
+  ✓ sealed property accessible
+  ✓ verify() works
+  ✓ Cleanup complete
+✓ PASS
+
+======================================================================
+TEST: Tornado Scenario Execution
+======================================================================
+Testing scenario execution...
+================================================================
+  WHITE SWAN A.R.T. — TORNADO RESPONSE
+  No unit decides alone. Consensus + veto + human authority.
+================================================================
+
+  ACTION: Scout: launch air recon
+    Scout       AUTHORIZE conf=0.74  [bc39dc61fd762ae8]  clear LOS
+    Guardian    AUTHORIZE conf=0.97  [37e8b79a041f7a6f]  load path safe
+    Pathfinder  AUTHORIZE conf=1.00  [c1eb188a1c833ddb]  corridor established
+    Medic       AUTHORIZE conf=1.00 (veto-auth)  [ae81af9054c70362]  patient transportable
+    Sentinel    AUTHORIZE conf=0.70  [efbd5fa02539196d]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> AUTHORIZE   (consensus, confidence 0.88)
+
+  ACTION: Guardian: enter collapsed structure
+    Scout       AUTHORIZE conf=0.62  [894094b3affe6222]  clear LOS
+    Guardian    REFUSE    conf=0.62  [d7a50e171402d912]  unstable structure
+    Pathfinder  AUTHORIZE conf=0.92  [8237dea205ba553e]  corridor established
+    Medic       AUTHORIZE conf=1.00 (veto-auth)  [d7b3f0e12fbec95c]  patient transportable
+    Sentinel    AUTHORIZE conf=0.57  [360ad98416234ffb]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> REFUSE   (no consensus (1 dissent))
+
+  ACTION: Guardian: move casualty now
+    Scout       AUTHORIZE conf=0.71  [5ed3122c1cfb4f1a]  clear LOS
+    Guardian    AUTHORIZE conf=0.75  [76ae6543cf108a01]  load path safe
+    Pathfinder  AUTHORIZE conf=0.95  [4d557239b7746f36]  corridor established
+    Medic       REFUSE    conf=0.59 (VETO)  [a975776d08c7d419]  casualty unstable
+    Sentinel    AUTHORIZE conf=0.64  [0938fb221d8a3a5d]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> REFUSE   (VETO by Medic: casualty unstable)
+
+  ACTION: Guardian: move casualty now
+    Scout       AUTHORIZE conf=0.71  [5ed3122c1cfb4f1a]  clear LOS
+    Guardian    AUTHORIZE conf=0.75  [76ae6543cf108a01]  load path safe
+    Pathfinder  AUTHORIZE conf=0.95  [4d557239b7746f36]  corridor established
+    Medic       REFUSE    conf=0.59 (VETO)  [a975776d08c7d419]  casualty unstable
+    Sentinel    AUTHORIZE conf=0.64  [0938fb221d8a3a5d]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> REFUSE   (VETO by Medic: casualty unstable | commander approval BLOCKED (cannot override casualty veto))  commander=APPROVE
+
+  ACTION: Pathfinder: cross flooded corridor
+    Scout       AUTHORIZE conf=0.53  [a8ae70d5e8bc71ad]  clear LOS
+    Guardian    AUTHORIZE conf=0.53  [3e2086d025df3635]  load path safe
+    Pathfinder  AUTHORIZE conf=0.72  [54b941ebd3c837a3]  corridor established
+    Medic       AUTHORIZE conf=0.76 (veto-auth)  [b1b1d6ba46633fdd]  patient transportable
+    Sentinel    AUTHORIZE conf=0.48  [02bb9403b56f767c]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> HOLD_FOR_COMMANDER   (consensus but low confidence (0.6))
+
+  ACTION: Pathfinder: cross flooded corridor
+    Scout       AUTHORIZE conf=0.53  [a8ae70d5e8bc71ad]  clear LOS
+    Guardian    AUTHORIZE conf=0.53  [3e2086d025df3635]  load path safe
+    Pathfinder  AUTHORIZE conf=0.72  [54b941ebd3c837a3]  corridor established
+    Medic       AUTHORIZE conf=0.76 (veto-auth)  [b1b1d6ba46633fdd]  patient transportable
+    Sentinel    AUTHORIZE conf=0.48  [02bb9403b56f767c]  network holds
+    ------------------------------------------------------
+    WHITE SWAN -> AUTHORIZE   (released by Incident Commander)  commander=APPROVE
+
+================================================================
+  Mission ledger sealed: 6 governed decisions
+  Independent verify   : PASS — Ledger integrity verified: chain complete, entries linked, signature valid
+  Exported             : test_tornado.json
+================================================================
+  ✓ tornado_scenario() executed (test_tornado.json)
+  ✓ tornado_scenario ledger verified
+✓ PASS
+
+======================================================================
+TEST: RescueChain Scenario Execution
+======================================================================
+Testing RescueChain scenario...
+====================================================================
+  WHITE SWAN A.R.T. — RescueChain :: FLASH FLOOD, COLLAPSED STRUCTURE
+  No unit decides alone. No commander overrides casualty safety.
+====================================================================
+
+  [1] Scout maps scene
+      action: Scout: launch + map debris field
+        Scout       AUTHORIZE conf=0.77  clear LOS
+        Sentinel    AUTHORIZE conf=0.76  network holds
+      -> AUTHORIZE   (consensus, confidence 0.77)
+
+  [2] Sentinel establishes comms
+      action: Sentinel: deploy mesh + relay
+        Sentinel    AUTHORIZE conf=0.76  network holds
+      -> AUTHORIZE   (consensus, confidence 0.76)
+
+  [3] Pathfinder finds corridor
+      action: Pathfinder: establish access corridor
+        Pathfinder  AUTHORIZE conf=0.85  corridor established
+        Scout       AUTHORIZE conf=0.77  clear LOS
+        Sentinel    AUTHORIZE conf=0.76  network holds
+      -> AUTHORIZE   (consensus, confidence 0.79)
+
+  >>> FAILURE INJECTED: Sentinel offline (relay lost) <<<
+
+  [4] Guardian clears path
+      action: Guardian: scraper-blade debris clear
+        Guardian    AUTHORIZE conf=0.83  load path safe
+        Pathfinder  AUTHORIZE conf=0.92  corridor established
+        Sentinel    OFFLINE
+      -> AUTHORIZE   (degraded (Sentinel offline) — released by Incident Commander)  | commander=APPROVE
+
+  [5] Medic evaluates casualty
+      action: Medic: triage + vitals
+        Medic       AUTHORIZE conf=1.00 (veto-auth)  patient transportable
+        Sentinel    OFFLINE
+      -> HOLD_FOR_COMMANDER   (degraded (Sentinel offline) — needs commander ack)
+
+  >>> FAILURE INJECTED: casualty destabilizes during extraction <<<
+
+  [6] Guardian extracts (attempt 1)
+      action: Guardian: extract casualty
+        Guardian    AUTHORIZE conf=0.83  load path safe
+        Medic       REFUSE    conf=0.48 (VETO)  casualty unstable
+        Pathfinder  AUTHORIZE conf=0.92  corridor established
+        Sentinel    OFFLINE
+      -> REFUSE   (VETO by Medic: casualty unstable | commander approval BLOCKED (cannot override casualty veto))  | commander=APPROVE
+
+  >>> Casualty re-stabilized; re-attempt <<<
+
+  [7] Guardian extracts (attempt 2)
+      action: Guardian: extract casualty
+        Guardian    AUTHORIZE conf=0.83  load path safe
+        Medic       AUTHORIZE conf=0.85 (veto-auth)  patient transportable
+        Pathfinder  AUTHORIZE conf=0.92  corridor established
+        Sentinel    OFFLINE
+      -> AUTHORIZE   (degraded (Sentinel offline) — released by Incident Commander)  | commander=APPROVE
+
+====================================================================
+  AFTER-ACTION REPORT  (generated from the signed ledger)
+====================================================================
+  [OK ] Scout maps scene         conf=0.77  consensus, confidence 0.77
+  [OK ] Sentinel establishes comms conf=0.76  consensus, confidence 0.76
+  [OK ] Pathfinder finds corridor conf=0.79  consensus, confidence 0.79
+  [OK ] Guardian clears path     conf=0.88  degraded (Sentinel offline) — released by Incident Commander  offline=['Sentinel']  CMDR=APPROVE
+  [HLD] Medic evaluates casualty conf=1.00  degraded (Sentinel offline) — needs commander ack  offline=['Sentinel']
+  [REF] Guardian extracts (attempt 1) conf=0.74  VETO by Medic: casualty unstable | commander approval BLOCKED (cannot override casualty veto)  offline=['Sentinel']  CMDR=APPROVE
+  [OK ] Guardian extracts (attempt 2) conf=0.87  degraded (Sentinel offline) — released by Incident Commander  offline=['Sentinel']  CMDR=APPROVE
+--------------------------------------------------------------------
+  7 governed decisions: 5 authorized, 1 held, 1 refused
+--------------------------------------------------------------------
+  Ledger sealed & exported: test_rescuechain.json
+  Independent verification: PASS — Ledger integrity verified: chain complete, entries linked, signature valid
+====================================================================
+  ✓ run_rescuechain() executed (test_rescuechain.json)
+  ✓ run_rescuechain ledger verified
+✓ PASS
+
+======================================================================
+TEST: Pytest Test Suite
+======================================================================
+Testing pytest suite...
+✗ ERROR: [Errno 2] No such file or directory: 'pytest'
+
+======================================================================
+TEST: Main Orchestrator (test mode)
+======================================================================
+Testing main.py orchestrator...
+  stdout: [2026-07-07T20:53:31.034959] Starting test suite execution...
+
+✗ FAIL: main.py test failed: Traceback (most recent call last):
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 234, in <module>
+    main()
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 220, in main
+    success = orchestrator.run_tests()
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 41, in run_tests
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'pytest'
+
+
+======================================================================
+TEST: Unified Operations (main.py all)
+======================================================================
+Testing unified operations (main.py all)...
+  Return code: 1
+  ✓ OPERATIONS_REPORT.json created
+  ✓ Report structure valid
+  ✓ art_tornado_ledger.json generated
+  ✓ rescuechain_ledger.json generated
+  ✓ Unified operations completed
+✓ PASS
+
+╔====================================================================╗
+║                                                                    ║
+║                       INTEGRATION TEST SUMMARY                     ║
+║                         6 Passed | 2 Failed                        ║
+║                                                                    ║
+╚====================================================================╝
+
+Failures:
+
+  • Pytest Test Suite
+    [Errno 2] No such file or directory: 'pytest'
+
+  • Main Orchestrator (test mode)
+    main.py test failed: Traceback (most recent call last):
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 234, in <module>
+    main()
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 220, in main
+    success = orchestrator.run_tests()
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/main.py", line 41, in run_tests
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'pytest'
+
+
+
+
+=== STDERR ===
+Traceback (most recent call last):
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/integration_test.py", line 37, in test
+    func()
+  File "/home/runner/work/H-W-supreme-Ai-/H-W-supreme-Ai-/integration_test.py", line 173, in test_pytest_suite
+    result = subprocess.run(
+             ^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "/usr/lib/python3.12/subprocess.py", line 1955, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'pytest'
