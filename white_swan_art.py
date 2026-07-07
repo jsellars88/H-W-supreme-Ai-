@@ -145,7 +145,8 @@ def run_action(name, world, ledger, commander_override=None):
     return decision
 
 
-def tornado_scenario(seed=7):
+def tornado_scenario(ledger_path="art_tornado_ledger.json", seed=7):
+    """Execute Tornado scenario and export ledger to specified path."""
     rng = random.Random(seed)
     print("=" * 64)
     print("  WHITE SWAN A.R.T. — TORNADO RESPONSE")
@@ -186,13 +187,14 @@ def tornado_scenario(seed=7):
     run_action("Pathfinder: cross flooded corridor", marginal, led,
                commander_override="APPROVE")
 
-    led.export("/mnt/user-data/outputs/art_mission_ledger_v1_1.json")
-    ok, reason = ForensicLedger.verify("/mnt/user-data/outputs/art_mission_ledger_v1_1.json")
+    led.export(ledger_path)
+    ok, reason = ForensicLedger.verify(ledger_path)
     print("\n" + "=" * 64)
-    print(f"  Mission ledger sealed: {led.sealed['entry_count']} governed decisions")
+    print(f"  Mission ledger sealed: {led._sealed['entry_count']} governed decisions")
     print(f"  Independent verify   : {'PASS' if ok else 'FAIL'} — {reason}")
-    print(f"  Exported             : /mnt/user-data/outputs/art_mission_ledger_v1_1.json")
+    print(f"  Exported             : {ledger_path}")
     print("=" * 64)
+    return ok
 
 
 # ============================================================================
@@ -260,7 +262,8 @@ def after_action_report(ledger_doc):
     print(f"  {len(ledger_doc['entries'])} governed decisions: {auth} authorized, {hld} held, {ref} refused")
 
 
-def run_rescuechain():
+def run_rescuechain(ledger_path="rescuechain_ledger.json"):
+    """Execute RescueChain scenario and export ledger to specified path."""
     print("=" * 68)
     print("  WHITE SWAN A.R.T. — RescueChain :: FLASH FLOOD, COLLAPSED STRUCTURE")
     print("  No unit decides alone. No commander overrides casualty safety.")
@@ -306,14 +309,14 @@ def run_rescuechain():
               w(comms_coverage=0.3, casualty_stable=True, evac_window_min=20),
               led, available, casualty_phase=True, commander_override="APPROVE")
 
-    path = "/mnt/user-data/outputs/rescuechain_ledger_v1_1.json"
-    led.export(path)
-    ok, reason = ForensicLedger.verify(path)
-    after_action_report(led.sealed)
+    led.export(ledger_path)
+    ok, reason = ForensicLedger.verify(ledger_path)
+    after_action_report(led._sealed)
     print("-" * 68)
-    print(f"  Ledger sealed & exported: {path}")
+    print(f"  Ledger sealed & exported: {ledger_path}")
     print(f"  Independent verification: {'PASS' if ok else 'FAIL'} — {reason}")
     print("=" * 68)
+    return ok
 
 
 def print_ledger_summary():
