@@ -6,7 +6,11 @@
 
 ## Overview
 
-White Swan A.R.T. implements a **5-unit consensus model with safety veto authority** and cryptographically-sealed forensic ledgers. No single unit decides alone. The commander can refuse actions or release low-confidence holds—but **cannot override casualty safety vetoes**.
+White Swan A.R.T. implements a **5-unit consensus model with safety veto authority** and cryptographically-sealed forensic ledgers. No single unit decides alone. The commander can refuse actions or release holds, but cannot override casualty safety vetoes.
+
+### Core Principle
+
+Every governed decision is recorded in a **hash-chained, Ed25519-signed forensic ledger**. The ledger proves what was decided, who decided it, and that no decision was retroactively altered.
 
 **Key insight:** Governance constrains the human too.
 
@@ -77,14 +81,30 @@ This is the load-bearing invariant: the system constrains human authority in saf
   - Commander authority bounds
   - Ledger integrity (chain, deletion, payload tampering detection)
 
+### Unified Orchestrator
+
+- **main.py** — Single entry point for all operations
+  - Test suite execution via pytest
+  - Scenario simulation (Tornado, RescueChain)
+  - Ledger verification
+  - Comprehensive report generation
+
+- **integration_test.py** — Integration test suite
+  - Module import validation
+  - API availability checks
+  - Scenario execution verification
+  - End-to-end orchestrator testing
+
 ### Mission Records
 
 - **art_tornado_ledger.json** — Sealed Tornado Scenario (6 decisions)
 - **rescuechain_ledger.json** — Sealed RescueChain Mission (7 decisions)
+- **OPERATIONS_REPORT.json** — Unified operations summary
 
 ### Configuration
 
 - **requirements.txt** — Python dependencies
+- **Makefile** — Build and execution targets
 
 ---
 
@@ -96,16 +116,110 @@ This is the load-bearing invariant: the system constrains human authority in saf
 pip install -r requirements.txt
 ```
 
-### Run Tornado Scenario
+### Run Everything (Unified Orchestrator)
 
 ```bash
+make run
+```
+
+Or directly:
+
+```bash
+python main.py all -v
+```
+
+This executes:
+1. ✅ Full test suite (62 tests)
+2. ✅ Tornado Scenario (6 governed decisions)
+3. ✅ RescueChain Scenario (7 governed decisions)
+4. ✅ Ledger verification (Ed25519 signature + chain integrity)
+5. ✅ Report generation (OPERATIONS_REPORT.json)
+
+**Total time:** ~2-3 minutes
+
+### Integration Testing
+
+To verify that all components are properly integrated:
+
+```bash
+python integration_test.py
+```
+
+This validates:
+- Module imports and exports
+- ForensicLedger API functionality
+- Scenario execution with parameterized ledger paths
+- Pytest test suite execution
+- Main orchestrator (test and all modes)
+- End-to-end unified operations
+
+### Individual Commands
+
+```bash
+# Run just the test suite
+python main.py test -v
+
+# Run just Tornado scenario
+python main.py tornado
+
+# Run just RescueChain scenario
+python main.py rescuechain
+
+# Verify ledger integrity
+python main.py verify
+
+# Full test suite via pytest
+pytest test_white_swan_art.py -v
+
+# Run Tornado scenario directly
 python white_swan_art.py
 ```
 
-### Run Full Test Suite
+---
+
+## Evidence & Reproducibility
+
+### What "make run" Produces
+
+When you execute `make run` (or `python main.py all`), you get:
+
+1. **OPERATIONS_REPORT.json** — Timestamped summary including:
+   - Test suite results (count, status)
+   - Scenario execution results
+   - Ledger verification status
+   - Full execution timeline
+
+2. **art_tornado_ledger.json** — Sealed forensic ledger with:
+   - 6 governed decisions (Scout recon, Guardian ops, Pathfinder crossing)
+   - Hash chain (each entry links to previous)
+   - Ed25519 signature (proves ledger was not altered)
+   - Entry count and chain head hash
+
+3. **rescuechain_ledger.json** — Sealed forensic ledger with:
+   - 7 governed decisions (multi-phase rescue with failures)
+   - Hash chain with offline unit handling
+   - Ed25519 signature
+   - Casualty safety veto demonstrations
+
+### Independent Verification
+
+A third party can clone this repository and verify everything independently:
 
 ```bash
-pytest test_white_swan_art.py -v
+# Clone
+git clone https://github.com/jsellars88/H-W-supreme-Ai-.git
+cd H-W-supreme-Ai-
+
+# Run
+make run
+
+# Inspect results
+cat OPERATIONS_REPORT.json
+cat art_tornado_ledger.json
+cat rescuechain_ledger.json
+
+# Verify ledger signatures independently
+python -c "from governance_ledger import ForensicLedger; ok, reason = ForensicLedger.verify('art_tornado_ledger.json'); print(f'Verification: {ok} — {reason}')"
 ```
 
 ---
@@ -134,6 +248,21 @@ Every decision is recorded in a hash-chained ledger, signed with Ed25519. Immuta
 
 ---
 
+## Architecture Maturity
+
+| Stage | Status | Evidence |
+|-------|--------|----------|
+| Constitutional Architecture | ✅ Mature | white_swan_art.py, governance_ledger.py |
+| Canonical Registry | ✅ Mature | Conductor functions, scenario definitions |
+| Governance Kernel | ✅ Mature | white_swan_command, consensus policy |
+| Unified Runtime | ✅ Integrated | main.py, integration_test.py |
+| CI/CD Pipeline | ✅ Available | Makefile, .github/workflows/deploy.yml |
+| Test Automation | ✅ Complete | test_white_swan_art.py (62 tests) |
+| Reproducible Execution | ✅ Verified | `make run` produces identical artifacts |
+| External Auditability | ✅ Ready | Ed25519 signatures, forensic ledgers |
+
+---
+
 ## License
 
 MIT License.
@@ -141,3 +270,4 @@ MIT License.
 ---
 
 Last Updated: 2026-07-07
+Updated for integration testing: 2026-07-07
