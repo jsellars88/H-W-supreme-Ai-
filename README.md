@@ -265,7 +265,7 @@ Every decision is recorded in a hash-chained ledger, signed with Ed25519. Immuta
 
 ## License
 
-MIT License.
+Holmes & Watson Supreme AI 
 
 ---
 
